@@ -1,3 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'bundler', '~> 2.2', '>= 2.2.16'
 gem 'rspec'
+gem 'tadb', '~> 0.3.8'
+gem 'pry'
