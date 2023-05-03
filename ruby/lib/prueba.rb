@@ -1,23 +1,43 @@
 require 'tadb'
 
+module Boolean
+
+end
+
+class TrueClass
+  include Boolean
+end
+
+class FalseClass
+  include Boolean
+end
+
 class Module
   def has_one(type, description)
+    #TODO: Agregar validaciones si es de tipo persistible
     name = description[:named]
     attr_accessor name
-    persistent_attrs_array = singleton_methods(false).include?(:persistent_attrs) ? singleton_method(:persistent_attrs).call.push(name) : [name]
+    attr_options_hash = {name => { :type => type }}
+    persistent_attrs_hash = singleton_methods(false).include?(:persistent_attrs) ? singleton_method(:persistent_attrs).call.merge(attr_options_hash) : attr_options_hash
     define_singleton_method(:persistent_attrs) do
-      persistent_attrs_array
+      persistent_attrs_hash
     end
   end
 
   def all_instances
     table = TADB::DB.table(self.to_s)
+    obj = self.new
+    obj.define_singleton_method(:id=) do |id|
+      id
+    end
     table.entries.collect do |attributes|
-      obj = self.new
       attributes.each do |attr, value|
-        if attr != :id
-          obj.send(attr.to_s+"=", value)
+        if attr === :id
+          obj.define_singleton_method(:id) do
+            value
+          end
         end
+        obj.send(attr.to_s+"=", value)
       end
       obj
     end
@@ -45,27 +65,49 @@ class Module
 
 end
 class Object
+
+  @@simple_types = [Numeric, String, Boolean]
   def save!
+
     table = TADB::DB.table(self.class.to_s)
+    persistent_attrs_hash = self.class.singleton_method(:persistent_attrs).call
+
     entry = {}
-    self.class.singleton_method(:persistent_attrs).call.each { |name| entry[name] = send(name)  }
-    id = table.insert(entry)
-    if singleton_methods(false).include?(:id)
-      table.delete(self.id)
+    persistent_attrs_hash.each do |name, options|
+      type = options[:type]
+      entry[name] = @@simple_types.include?(type) ? send(name) : send(name).save!
     end
-    define_singleton_method(:id) do
+
+    if singleton_methods(false).include?(:id)
+      entry = entry.merge({:id=>self.id})
+      table.delete(self.id)
+      table.insert(entry)
+      self.id
+    else
+      id = table.insert(entry)
+      define_singleton_method(:id) do
+        id
+      end
+      define_singleton_method(:id=) do |id|
+        id
+      end
       id
     end
+
   end
 
   def refresh!
     table = TADB::DB.table(self.class.to_s)
     entry = table.entries.find { |entry| entry[:id] === id }
     entry.each do |attr, value|
-      if attr != :id
-        send(attr.to_s+"=", value)
+      if attr === :id
+        next
       end
+      type = self.class.singleton_method(:persistent_attrs).call[attr][:type]
+      value = @@simple_types.include?(type) ? value : type.find_by_id(value)[0]
+      send(attr.to_s+"=", value)
     end
+    self
   end
 
   def forget!
@@ -76,7 +118,27 @@ class Object
     end
   end
 end
+class Grade
+  has_one Numeric, named: :value
+end
 
+class Student
+  has_one String, named: :full_name
+  has_one Grade, named: :grade
+end
+
+s = Student.new
+s.full_name = "leo sbaraglia"
+s.grade = Grade.new
+s.grade.value = 8
+s.save! # Salva al estudiante Y su nota
+g = s.grade # Retorna Grade(8)
+g.value
+g.value = 5
+g.save!
+s.refresh!.grade.value # Retorna Grade(5)
+
+=begin
 class Person
   has_one String, named: :first_name
   has_one String, named: :last_name
@@ -116,3 +178,4 @@ p2.forget!
 puts "all_instances despues de forget! #{Person.all_instances}"
 
 puts "find_by_first_name #{Person.find_by_first_name("pepe")}"
+=end
