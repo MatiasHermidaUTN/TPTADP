@@ -74,6 +74,7 @@ end
 
 class Module
 
+  @@simple_types = [Numeric, String, Boolean]
   def has_one(type, description)
     #TODO: Agregar validaciones si es de tipo persistible
     name = description[:named]
@@ -99,6 +100,9 @@ class Module
           obj.define_singleton_method(:id) do
             value
           end
+        elsif
+          type = persistent_attrs[attr][:type]
+          value = @@simple_types.include?(type) ? value : type.find_by_id(value)[0]
         end
         obj.send(attr.to_s+"=", value)
       end
@@ -147,7 +151,6 @@ g.value
 g.value = 5
 g.save!
 s.refresh!.grade.value # Retorna Grade(5)
-s.forget!
 
 =begin
 class Person
