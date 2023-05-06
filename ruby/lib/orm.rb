@@ -10,7 +10,7 @@ module ORM
   end
 
   def persistent_attributes
-    @persistent_attributes || {}
+    @persistent_attributes || { id: String }
   end
 
   def add_persistent_attribute!(persistent_attribute)
