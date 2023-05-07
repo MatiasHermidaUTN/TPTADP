@@ -3,14 +3,13 @@ require 'errors/not_persisted_error'
 module Persistent
 
   def save!
-    self.id = table.insert(self.attributes_hash)
-    if !self.class.all_instances.include? self
-      self.class.all_instances << self
+    if (id)
+      table.delete(id)
     end
+    self.id = table.insert(self.attributes_hash)
   end
 
   def refresh!
-    table = table()
     if !id
       raise NotPersistedError.new(self)
     end
@@ -24,9 +23,7 @@ module Persistent
   end
 
   def forget!
-    table = table()
     table.delete(id)
-    self.class.all_instances.delete(self)
     self.id = nil
   end
 

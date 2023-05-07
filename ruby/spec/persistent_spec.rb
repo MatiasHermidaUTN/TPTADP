@@ -101,10 +101,10 @@ describe 'Persistent' do
       p4.save!
       all_instances = Point.all_instances
       expect(all_instances.length).to eq 2
-      expect(all_instances[0].x).to eq 3
-      expect(all_instances[0].y).to eq 8
-      expect(all_instances[1].x).to eq 1
-      expect(all_instances[1].y).to eq 3
+      expect(all_instances[0].x).to eq 1
+      expect(all_instances[0].y).to eq 3
+      expect(all_instances[1].x).to eq 3
+      expect(all_instances[1].y).to eq 8
 
       p2.forget!
       all_instances = Point.all_instances
