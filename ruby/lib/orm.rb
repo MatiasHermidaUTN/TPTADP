@@ -4,6 +4,7 @@ require_relative './boolean'
 module ORM
 
   def has_one(type, description)
+    @all_instances = []
     attribute_name = description[:named]
     attr_accessor attribute_name
     add_persistent_attribute!(attribute_name => type)
@@ -17,6 +18,9 @@ module ORM
     @persistent_attributes = persistent_attributes.merge(persistent_attribute)
   end
 
+  def all_instances
+    @all_instances
+  end
 end
 
 Class.include(ORM)
