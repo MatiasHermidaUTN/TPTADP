@@ -21,3 +21,15 @@ class Point
     self.y = self.y + other.y
   end
 end
+
+class Student
+  has_one String, named: :full_name
+  has_one Numeric, named: :grade
+  def promoted
+    self.grade > 8
+  end
+
+  def has_last_name(last_name)
+    self.full_name.split(' ')[1] === last_name
+  end
+end

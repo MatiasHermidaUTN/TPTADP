@@ -29,6 +29,29 @@ module ORM
     end
     return all_instances
   end
+
+  def responds_to_find_by(name)
+    name.to_s.start_with?("find_by_")
+  end
+
+  def method_missing(name, *args)
+    if responds_to_find_by(name)
+      value = args[0]
+      message = name.to_s.delete_prefix("find_by_")
+      self.all_instances.select do |obj|
+        if (obj.method(message).arity != 0)
+          super
+        end
+        obj.send(message) == value
+      end
+    else
+      super
+    end
+  end
+
+  def respond_to_missing?(name, include_private = false)
+    responds_to_find_by(name) || super
+  end
 end
 
 Class.include(ORM)
