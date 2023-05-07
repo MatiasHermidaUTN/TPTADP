@@ -8,7 +8,6 @@ class Person
 end
 
 class Grade
-  has_one String, named: :value
   has_one Numeric, named: :value
 end
 
@@ -32,4 +31,9 @@ class Student
   def has_last_name(last_name)
     self.full_name.split(' ')[1] === last_name
   end
+end
+
+class StudentWithGrade
+  has_one String, named: :full_name
+  has_one Grade, named: :grade
 end

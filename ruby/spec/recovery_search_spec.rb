@@ -1,6 +1,6 @@
 require_relative 'spec_helper'
 
-describe 'ORM' do
+describe 'Recovery and Search' do
   before { TADB::DB.clear_all }
   after  { TADB::DB.clear_all }
 
