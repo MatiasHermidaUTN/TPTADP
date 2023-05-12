@@ -37,12 +37,11 @@ describe 'Herency and Composition' do
             expect(s.grades).to eq []
         end
         it "Agrego 2 grades con diferentes valores y se guardan todas" do
-            # rompe acá
             s.grades.push(Grade.new)
             s.grades.last.value = 8
             s.grades.push(Grade.new)
             s.grades.last.value = 5
-            # s.save!
+            s.save!
             expect(s.refresh!.grades[0].value).to eq 8
             expect(s.refresh!.grades[1].value).to eq 5
         end

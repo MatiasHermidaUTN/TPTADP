@@ -15,21 +15,20 @@ module ORM
 
     def has_many(type, description)
         self.has_one(type, description)
-        self.define_method("#{description[:named]}") do
-            self.instance_variable_get("@#{description[:named]}").nil? ? [] : self.instance_variable_get("@#{description[:named]}")
+        attr_accessor_has_many(description[:named])
+    end
+
+    def attr_accessor_has_many(attribute_name)
+        self.define_method(attribute_name.to_s) do
+            if self.instance_variable_get("@" + attribute_name.to_s).nil?
+                self.instance_variable_set("@" + attribute_name.to_s, [])
+            else
+                self.instance_variable_get("@" + attribute_name.to_s)
+            end
         end
     end
 
     def all_instances
-        # opcion 1 - solo para tipos simples:
-        # table.entries.collect do |entry|
-        #     instance = self.new
-        #     entry.each do |attribute_name, saved_value|     #este saved_value puede ser un id y con el codigo sig no se recupera el objeto
-        #         instance.send(attribute_name.to_s + "=", saved_value)
-        #     end
-        #     instance
-        # end
-        # opcion 2 - si tengo tipos complejos, busco sus objetos en la tabla:
         table.entries.collect do |entry|
             instance = self.new
             entry.each do |attribute_name, saved_value|
@@ -82,3 +81,20 @@ module ORM
 
 end
 Module.include(ORM)
+
+TADB::DB.clear_all
+class Grade
+    has_one Numeric, named: :value
+end
+class Student
+    has_many String, named: :full_names
+    has_many Grade, named: :grades
+end
+s = Student.new
+s.full_names << "Juan"
+s.full_names << "Pedro"
+s.grades.push(Grade.new)
+s.grades.last.value = 8
+s.grades.push(Grade.new)
+s.grades.last.value = 5
+s.save!
