@@ -1,9 +1,23 @@
 require_relative './errors/not_persisted_error'
+require_relative './errors/AttrNotCorrectTypeError'
 
 module Persistent
 
+  def validate!(hash_all_attr)
+    self.class.persistent_attributes.each do |attr_name, type_attr|
+      if attr_name == :id and (hash_all_attr[attr_name].is_a?type_attr or hash_all_attr[attr_name].nil?) or
+                              self.class.is_complex_type?(type_attr) or
+                              hash_all_attr[attr_name].is_a?(Array)
+        next
+      end
+
+      raise AttrNotCorrectTypeError.new(self) unless hash_all_attr[attr_name].is_a?(type_attr)
+    end
+  end
+
   def save!
     hash_all_attr = self.attributes_hash
+    self.validate!(hash_all_attr)
 
     save_complex!(hash_all_attr)
     save_many!(hash_all_attr)

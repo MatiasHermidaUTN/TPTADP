@@ -78,7 +78,7 @@ describe 'ORM' do
     describe '#find_by' do
 
         describe 'no hay instancias' do
-            it do expect(Student.find_by_first_name('raul')).to be_empty end
+            it do expect(Student.find_by_full_name('raul')).to be_empty end
         end
 
         describe 'hay instancias de objetos simples' do

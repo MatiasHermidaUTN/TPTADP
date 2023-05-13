@@ -13,12 +13,14 @@ describe 'Persistent' do
       before do
         raul.first_name = 'raul'
         raul.last_name = 'porcheto'
-        raul.admin = false
         raul.age = 74
+        raul.admin = false
         raul.save!
       end
 
-      it { expect(raul.id).to_not be_nil }
+      it do
+        expect(raul.id).to_not be_nil
+      end
     end
 
   end
