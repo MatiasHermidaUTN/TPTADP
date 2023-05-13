@@ -44,3 +44,17 @@ class StudentWithManyGrades
   has_one Point, named: :ubicacion
   has_many Grade, named: :grades
 end
+
+#
+module PersonMixin
+  has_one String, named: :full_name
+end
+
+class StudentWithPersonMixin
+  include PersonMixin
+  has_one Grade, named: :grade
+end
+
+class AssistantProfessor < StudentWithPersonMixin
+  has_one String, named: :type
+end

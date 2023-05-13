@@ -71,4 +71,80 @@ describe 'Herency and Composition' do
         end
     end
 
+    describe 'Herencia entre tipos' do
+        let(:s1) { StudentWithPersonMixin.new }
+        let(:assisProf) { AssistantProfessor.new }
+
+        before do
+            s1.full_name = "Pedro Gonzales"
+            s1.grade = Grade.new
+            s1.grade.value = 5
+            s1.save!
+            assisProf.full_name = "Miguel Sanchez"
+            assisProf.grade = Grade.new
+            assisProf.grade.value = 7
+            assisProf.type = "Assistant"
+            assisProf.save!
+        end
+
+        it "No existe una tabla para el modulo PersonMixin" do
+            expect{PersonMixin.new.table}.to raise_error NoMethodError
+        end
+        it "Existe tabla para clase StudentWithPersonMixin con attr suyos mas de Persona" do
+            expect{StudentWithPersonMixin.new.table}.to_not raise_error NoMethodError
+            expect(StudentWithPersonMixin.persistent_attributes.keys).to eq [:id, :full_name, :grade]
+        end
+        it "Existe tabla para clase AssistantProfessor con attr suyos mas de StudentWithPersonMixin" do
+            expect{AssistantProfessor.new.table}.to_not raise_error NoMethodError
+            expect(AssistantProfessor.persistent_attributes.keys).to eq [:id, :full_name, :grade, :type]
+        end
+
+        it "Obtener todas las instancias del modulo PersonMixin trae las instancias de sus clases descendientes" do
+            # puts PersonMixin.all_instances.inspect
+            expect(StudentWithPersonMixin.all_instances[0].full_name).to eq s1.full_name
+            expect(StudentWithPersonMixin.all_instances[0].grade.value).to eq s1.grade.value
+            expect(StudentWithPersonMixin.all_instances[1].full_name).to eq assisProf.full_name
+            expect(StudentWithPersonMixin.all_instances[1].grade.value).to eq assisProf.grade.value
+            expect(StudentWithPersonMixin.all_instances[1].type).to eq assisProf.type
+        end
+        it "Obtener todas las instancias de la clase StudentWithPersonMixin trae sus instancias y las de sus clases descendientes" do
+            # puts StudentWithPersonMixin.all_instances.inspect
+            expect(StudentWithPersonMixin.all_instances[0].full_name).to eq s1.full_name
+            expect(StudentWithPersonMixin.all_instances[0].grade.value).to eq s1.grade.value
+            expect(StudentWithPersonMixin.all_instances[1].full_name).to eq assisProf.full_name
+            expect(StudentWithPersonMixin.all_instances[1].grade.value).to eq assisProf.grade.value
+            expect(StudentWithPersonMixin.all_instances[1].type).to eq assisProf.type
+        end
+        it "Obtener todas las instancias de la clase AssistantProfessor trae sus instancias" do
+            # puts AssistantProfessor.all_instances.inspect
+            expect(AssistantProfessor.all_instances[0].full_name).to eq assisProf.full_name
+            expect(AssistantProfessor.all_instances[0].grade.value).to eq assisProf.grade.value
+            expect(AssistantProfessor.all_instances[0].type).to eq assisProf.type
+        end
+
+        it "Find by full_name en StudentWithPersonMixin trae Estudiantes y Ayudantes con ese full_name" do
+            ap2 = AssistantProfessor.new
+            ap2.full_name = "Pedro Gonzales"
+            ap2.grade = Grade.new
+            ap2.grade.value = 10
+            ap2.type = "Assistant"
+            ap2.save!
+            encontrados = StudentWithPersonMixin.find_by_full_name("Pedro Gonzales")
+            expect(encontrados[0].full_name).to eq s1.full_name
+            expect(encontrados[0].grade.value).to eq s1.grade.value
+            expect(encontrados[1].full_name).to eq ap2.full_name
+            expect(encontrados[1].grade.value).to eq ap2.grade.value
+            expect(encontrados[1].type).to eq ap2.type
+        end
+        it "Find by type en StudentWithPersonMixin falla porque no todos Estudiantes y Ayudantes entienden el msj type" do
+            ap2 = AssistantProfessor.new
+            ap2.full_name = "Pedro Gonzales"
+            ap2.grade = Grade.new
+            ap2.grade.value = 10
+            ap2.type = "Assistant"
+            ap2.save!
+            expect{StudentWithPersonMixin.find_by_type("Assistant")}.to_not raise_error NotValidMethodForFindByError
+        end
+    end
+
 end

@@ -75,9 +75,8 @@ module Persistent
     self.id = nil
   end
 
-  # private
   def table
-    self.class.table
+    TADB::DB.table(self.class.name)
   end
 
   def get_complex_attributes

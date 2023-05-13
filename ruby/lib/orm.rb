@@ -8,14 +8,29 @@ module ORM
     def has_one(type, description)
         attribute_name = description[:named]
         attr_accessor attribute_name, :id
-        if persistent_attributes.nil? then @persistent_attributes = {id: String} end
-        add_persistent_attribute!(attribute_name => type)
+        self.add_persistent_attribute!(attribute_name => type)
         if self.is_a?(Class) then include Persistent end
+        self.init_descendant_registration
+
+    end
+
+    def init_descendant_registration
+        def self.included(descendant)
+            @descendants ||= []
+            @descendants << descendant
+        end
+        def self.inherited(descendant)
+            @descendants ||= []
+            @descendants << descendant
+        end
+        def descendants
+            @descendants ||= []
+        end
     end
 
     def has_many(type, description)
         self.has_one(type, description)
-        attr_accessor_has_many(description[:named])
+        self.attr_accessor_has_many(description[:named])
     end
 
     def attr_accessor_has_many(attribute_name)
@@ -29,15 +44,19 @@ module ORM
     end
 
     def all_instances
-        table.entries.collect do |entry|
-            instance = self.new
-            entry.each do |attribute_name, saved_value|
-                type_attr = self.persistent_attributes[attribute_name]
-                value = self.is_complex_type?(type_attr) ? type_attr.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
-                instance.send(attribute_name.to_s + "=", value)
+        all_instances = []
+        if self.is_a?(Class)
+            all_instances += self.new.table.entries.collect do |entry|
+                instance = self.new
+                entry.each do |attribute_name, saved_value|
+                    type_attr = self.persistent_attributes[attribute_name]
+                    value = self.is_complex_type?(type_attr) ? type_attr.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
+                    instance.send(attribute_name.to_s + "=", value)
+                end
+                instance
             end
-            instance
         end
+        self.descendants.sum(all_instances) { |descendant| descendant.all_instances }
     end
 
 
@@ -59,11 +78,7 @@ module ORM
     end
 
     def respond_to_missing?(symbol, include_private = false)
-        responds_to_find_by(symbol) || super
-    end
-
-    def table
-        TADB::DB.table(self.name)
+        self.responds_to_find_by(symbol) || super
     end
 
     def is_complex_type?(type)
@@ -71,34 +86,14 @@ module ORM
     end
 
     def persistent_attributes
-        @persistent_attributes
+        first_ancestor = self.ancestors[1]
+        @persistent_attributes ||= {id: String}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
     end
 
     # private
     def add_persistent_attribute!(persistent_attribute)
-        @persistent_attributes = persistent_attributes.merge(persistent_attribute)
+        @persistent_attributes = self.persistent_attributes.merge(persistent_attribute)
     end
 
 end
 Module.include(ORM)
-
-TADB::DB.clear_all
-class Grade
-    has_one Numeric, named: :value
-end
-class Student
-    has_many String, named: :full_names
-    has_many Grade, named: :grades
-end
-s = Student.new
-s.full_names << "Juan"
-s.full_names << "Pedro"
-s.grades.push(Grade.new)
-s.grades.last.value = 8
-s.grades.push(Grade.new)
-s.grades.last.value = 5
-s.save!
-s.full_names << "Lopez"
-s.grades.push(Grade.new)
-s.grades.last.value = 6
-puts s.refresh!.inspect
