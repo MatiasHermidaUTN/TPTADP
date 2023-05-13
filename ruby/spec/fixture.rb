@@ -41,5 +41,6 @@ end
 
 class StudentWithManyGrades
   has_one String, named: :full_name
+  has_one Point, named: :ubicacion
   has_many Grade, named: :grades
 end

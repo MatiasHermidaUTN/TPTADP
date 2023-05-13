@@ -98,3 +98,7 @@ s.grades.last.value = 8
 s.grades.push(Grade.new)
 s.grades.last.value = 5
 s.save!
+s.full_names << "Lopez"
+s.grades.push(Grade.new)
+s.grades.last.value = 6
+puts s.refresh!.inspect

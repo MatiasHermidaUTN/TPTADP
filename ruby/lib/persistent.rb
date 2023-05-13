@@ -49,10 +49,24 @@ module Persistent
     saved_obj = table.entries.find {|entry| entry[:id] == self.id}
     self.class.persistent_attributes.each do |attr_name, type_attr|
       saved_value = saved_obj[attr_name]
-      value = self.class.is_complex_type?(type_attr) ? type_attr.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
-      self.send(attr_name.to_s + "=", value)
+      if self.get_has_many_attributes.include?(attr_name)
+        self.refresh_many!(attr_name, type_attr, saved_value)
+      else
+        value = self.class.is_complex_type?(type_attr) ? type_attr.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
+        self.send(attr_name.to_s + "=", value)
+      end
     end
     self
+  end
+
+  def refresh_many!(attr_name, type_attr, id_many)
+    hash_attr = TADB::DB.table(attr_name).entries.select{ |entry| entry[:id] == id_many }.first
+    self.send(attr_name.to_s + "=", [])
+    hash_attr.keys.each do |key|
+      if key == :id then next end
+      value = self.class.is_complex_type?(type_attr) ? type_attr.find_by_id(hash_attr[key]).first : hash_attr[key]
+      self.send(attr_name.to_s).push(value)
+    end
   end
 
   def forget!
