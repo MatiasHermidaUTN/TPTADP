@@ -65,8 +65,9 @@ class StudentWithValidations
     has_one Numeric, named: :age, from: 18, to: 100
     has_many Grade, named: :grades, validate: proc{ value > 2 }
 end
-# puts Student.persistent_attributes.inspect
-# puts Student.persistent_attributes.keys.inspect
-# puts Student.persistent_attributes.values.inspect
-# puts Student.persistent_attributes_types.inspect
-# puts Student.persistent_attributes_validations.inspect
+
+#
+class StudentWithDefault
+  has_one String, named: :full_name, default: "natalia natalia"
+  has_one Grade, named: :grade, default: Grade.new, no_blank: true
+end

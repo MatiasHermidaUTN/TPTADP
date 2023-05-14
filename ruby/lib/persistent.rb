@@ -8,33 +8,31 @@ module Persistent
     self.class.persistent_attributes.each do |attr_name, hash_type_and_validations|
       type_attr = hash_type_and_validations[:type]
       value = hash_all_attr[attr_name]
-      if attr_name == :id and (value.is_a?type_attr or value.nil?) or
-                  self.class.is_complex_type?(type_attr) or value.is_a?(Array)
-        next
-      end
 
-      raise AttrNotCorrectTypeError.new(self) unless value.is_a?(type_attr)
-      self.validate_validations!(value, hash_type_and_validations[:validations])
+      next if ((attr_name == :id) and (value.is_a? type_attr or value.nil?) or
+                    self.class.is_complex_type?(type_attr) or value.is_a?(Array))
+
+      validations_or_default = hash_type_and_validations[:validations]
+      if value.nil? then value = hash_all_attr[attr_name] = validations_or_default[:default] end
+
+      raise AttrNotCorrectTypeError.new(attr_name) unless value.is_a?(type_attr)
+      self.validate_validations!(value, validations_or_default)
     end
   end
 
-  def validate_validations!(value, validations_or_defaults)
-    if validations_or_defaults[:no_blank]
+  def validate_validations!(value, validations)
+    if validations[:no_blank]
       raise ValidationError.new(self) if value.nil? or value == ""
     end
-    if validations_or_defaults[:from]
-      raise ValidationError.new(self) unless value >= validations_or_defaults[:from]
+    if validations[:from]
+      raise ValidationError.new(self) unless value >= validations[:from]
     end
-    if validations_or_defaults[:to]
-      raise ValidationError.new(self) unless value <= validations_or_defaults[:to]
+    if validations[:to]
+      raise ValidationError.new(self) unless value <= validations[:to]
     end
-    if validations_or_defaults[:validate]
-      raise ValidationError.new(self) unless validations_or_defaults[:validate].call(value)
+    if validations[:validate]
+      raise ValidationError.new(self) unless validations[:validate].call(value)
     end
-    # if validations_or_defaults[:default]
-    #   value = validations_or_defaults[:default].call(value)
-    #   hash_all_attr[attr_name] = value
-    # end
   end
 
   def save!

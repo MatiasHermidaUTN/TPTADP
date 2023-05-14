@@ -10,9 +10,16 @@ module ORM
         attr_accessor attribute_name, :id
         options = {:no_blank => description[:no_blank], :from => description[:from], :to => description[:to],
                                  :validate => description[:validate], :default => description[:default]}.compact
+
         self.add_persistent_attribute!(attribute_name => {:type => type, :validations => options})
         if self.is_a?(Class) then include Persistent end
         self.init_descendant_registration
+
+        self.define_method(:initialize) do
+            self.class.persistent_attributes_validations.select{|attr_name, validations| validations&.has_key?(:default)}.each do |attr_name, validations|
+                self.send(attr_name.to_s + "=", validations[:default])
+            end
+        end
     end
 
     def init_descendant_registration

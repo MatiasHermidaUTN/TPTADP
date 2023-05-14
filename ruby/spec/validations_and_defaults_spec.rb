@@ -51,24 +51,20 @@ describe 'Validaciones y Defaults' do
     end
 
     describe "Valores por defecto" do
-        let(:s) { StudentWithValidations.new }
+        let(:s) { StudentWithDefault.new }
 
         before do
-            s.full_name = ""
+            s.grade.value = 8
         end
 
-        it "Falla save si full_name vacio con no_blank true" do
-            expect { s.save! }.to raise_error(ValidationError)
+        it "full_name se inicializa al default" do
+            expect(s.full_name).to eq "natalia natalia"
         end
-        it "Falla save si age menor a from 18" do
-            s.full_name = "emanuel ortega"
-            s.age = 15
-            expect { s.save! }.to raise_error(ValidationError)
-        end
-        it "Falla save si grade.value no cumple proc {value > 2}" do
-            s.age = 22
-            s.grades.push(Grade.new)
-            expect { s.save! }.to raise_error(ValidationError)
+        it "Al guardar full_name en nil, se guarda el valor por default" do
+            s.full_name = nil
+            s.save!
+            s.refresh!
+            expect(s.full_name).to eq "natalia natalia"
         end
     end
 
