@@ -58,3 +58,15 @@ end
 class AssistantProfessor < StudentWithPersonMixin
   has_one String, named: :type
 end
+
+#
+class StudentWithValidations
+    has_one String, named: :full_name, no_blank: true
+    has_one Numeric, named: :age, from: 18, to: 100
+    has_many Grade, named: :grades, validate: proc{ value > 2 }
+end
+# puts Student.persistent_attributes.inspect
+# puts Student.persistent_attributes.keys.inspect
+# puts Student.persistent_attributes.values.inspect
+# puts Student.persistent_attributes_types.inspect
+# puts Student.persistent_attributes_validations.inspect

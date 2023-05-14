@@ -8,7 +8,7 @@ describe 'ORM' do
     describe '#has_one' do
 
         it 'pisa atributos con el mismo nombre' do
-            expect(Grade.persistent_attributes[:value]).to eql Numeric
+            expect(Grade.persistent_attributes_types[:value]).to eql Numeric
         end
 
         describe 'no valida el tipo' do

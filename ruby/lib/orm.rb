@@ -8,10 +8,11 @@ module ORM
     def has_one(type, description)
         attribute_name = description[:named]
         attr_accessor attribute_name, :id
-        self.add_persistent_attribute!(attribute_name => type)
+        options = {:no_blank => description[:no_blank], :from => description[:from], :to => description[:to],
+                                 :validate => description[:validate], :default => description[:default]}.compact
+        self.add_persistent_attribute!(attribute_name => {:type => type, :validations => options})
         if self.is_a?(Class) then include Persistent end
         self.init_descendant_registration
-
     end
 
     def init_descendant_registration
@@ -49,7 +50,7 @@ module ORM
             all_instances += self.new.table.entries.collect do |entry|
                 instance = self.new
                 entry.each do |attribute_name, saved_value|
-                    type_attr = self.persistent_attributes[attribute_name]
+                    type_attr = self.persistent_attributes_types[attribute_name]
                     value = self.is_complex_type?(type_attr) ? type_attr.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
                     instance.send(attribute_name.to_s + "=", value)
                 end
@@ -87,7 +88,19 @@ module ORM
 
     def persistent_attributes
         first_ancestor = self.ancestors[1]
-        @persistent_attributes ||= {id: String}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
+        @persistent_attributes ||= {id: {:type => String}}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
+    end
+
+    def persistent_attributes_types
+        self.persistent_attributes.transform_values do |value|
+            value[:type]
+        end
+    end
+
+    def persistent_attributes_validations
+        self.persistent_attributes.transform_values do |value|
+            value[:validations]
+        end
     end
 
     # private
