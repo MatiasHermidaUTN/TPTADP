@@ -5,22 +5,23 @@ require_relative './errors/ValidationError'
 module Persistent
 
   def validate!(hash_all_attr)
-    self.class.persistent_attributes.each do |attr_name, hash_type_and_validations|
-      type_attr = hash_type_and_validations[:type]
+    self.class.persistent_attr_validations.each do |attr_name, hash_validations|
+      type_attr = self.class.persistent_attr_types[attr_name]
       value = hash_all_attr[attr_name]
 
-      next if ((attr_name == :id) and (value.is_a? type_attr or value.nil?) or
-                    self.class.is_complex_type?(type_attr) or value.is_a?(Array))
+      next if (self.class.is_complex_type?(type_attr) or value.is_a?(Array))
 
-      validations_or_default = hash_type_and_validations[:validations]
-      if value.nil? then value = hash_all_attr[attr_name] = validations_or_default[:default] end
+      if value.nil? then value = hash_all_attr[attr_name] = hash_validations[:default] end
 
       raise AttrNotCorrectTypeError.new(attr_name) unless value.is_a?(type_attr)
-      self.validate_validations!(value, validations_or_default)
+      self.validate_validations!(value, hash_validations)
     end
   end
 
   def validate_validations!(value, validations)
+    # valdiation.each() do |validation, value_validation|
+    # 
+    # end
     if validations[:no_blank]
       raise ValidationError.new(self) if value.nil? or value == ""
     end
@@ -54,9 +55,9 @@ module Persistent
       #   next
       # end
       i=0
-      hash_values = array_values.to_h do |attr| ["#{attr_name}_#{i += 1}", attr] end  # {grades_1 => grade1, grades_2 => grade2}
+      hash_values = array_values.to_h do |attr| ["#{attr_name}_#{i += 1}", attr] end  # {id => .., grades_1 => grade1, grades_2 => grade2}
 
-      type_attr = self.class.persistent_attributes_types[attr_name]
+      type_attr = self.class.persistent_attr_types[attr_name]
       if self.class.is_complex_type?(type_attr)
         hash_values.each do |attr_name1, value|  # {grades_1 => grade1, grades_2 => grade2}
           id_complex = value.save!    #save! devuelve id de la tabla del attr complejo
@@ -81,7 +82,7 @@ module Persistent
   def refresh!
     raise NotPersistedError.new(self) if id.nil?
     saved_obj = table.entries.find {|entry| entry[:id] == self.id}
-    self.class.persistent_attributes_types.each do |attr_name, type_attr|
+    self.class.persistent_attr_types.each do |attr_name, type_attr|
       saved_value = saved_obj[attr_name]
       if self.get_has_many_attributes.include?(attr_name)
         self.refresh_many!(attr_name, type_attr, saved_value)
@@ -114,20 +115,20 @@ module Persistent
   end
 
   def get_complex_attributes
-    self.class.persistent_attributes_types.select do | attr_name, type|
+    self.class.persistent_attr_types.select do | attr_name, type|
       self.class.is_complex_type?(type)
     end
   end
 
   def get_has_many_attributes
-    self.class.persistent_attributes.keys.select do |attr_name|
+    self.class.persistent_attr_types.keys.select do |attr_name|
       self.send(attr_name).is_a?(Array)
     end
   end
 
   def attributes_hash
     hash = {}
-    self.class.persistent_attributes.keys.each do |attribute_name|
+    self.class.persistent_attr_types.keys.each do |attribute_name|
       hash.store(attribute_name, send(attribute_name))
     end
     hash

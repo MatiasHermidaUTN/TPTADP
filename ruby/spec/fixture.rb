@@ -71,3 +71,11 @@ class StudentWithDefault
   has_one String, named: :full_name, default: "natalia natalia"
   has_one Grade, named: :grade, default: Grade.new, no_blank: true
 end
+
+module Algo
+  has_one String, named: :full_name
+end
+
+class Hola
+  include Algo
+end
