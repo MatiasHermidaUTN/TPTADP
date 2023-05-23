@@ -33,7 +33,10 @@ module Persistent
   end
 
   def forget!
-    # hay que borrar los objetos complejos que estan asociados a este objeto?
+    hash_all_attr = self.attributes_hash
+    self.class.persistent_attributes.each do |attr_name, db_type|
+      db_type.forget!(hash_all_attr[attr_name], self)
+    end
     table.delete(self.id)
     self.id = nil
   end

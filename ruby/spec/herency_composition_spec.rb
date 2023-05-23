@@ -69,6 +69,13 @@ describe 'Herency and Composition' do
             expect(s.refresh!.grades[0].value).to eq 8
             expect(s.refresh!.grades[1].value).to eq 6
         end
+        it "Agrego 2 grades, guardo y los borro" do
+            self.add_grade(8)
+            self.add_grade(5)
+            s.save!
+            s.forget!
+            expect(s.id).to be_nil
+        end
     end
 
     describe 'Herencia entre tipos' do

@@ -26,6 +26,9 @@ module SimpleType
     def save!(hash_all_attr, attr_name, instance)
         hash_all_attr
     end
+
+    def forget!(attr, instance)
+    end
 end
 
 module DbType
@@ -73,6 +76,10 @@ class OneComplexDbType
     def refresh!(saved_value, attr_name, instance)
         instance.send(attr_name.to_s + "=", @type.find_by_id(saved_value).first)
     end
+
+    def forget!(attr, instance)
+        attr.forget!
+    end
 end
 
 class ManyComplexDbType
@@ -90,22 +97,38 @@ class ManyComplexDbType
         hash_all_attr[:id] ||= SecureRandom.uuid
         hash_all_attr[attr_name].each do |value|
             id_complex = value.save!
-            intermediate_table(instance.class.name).insert({ instance.class.name.to_sym => hash_all_attr[:id], self.class.name.to_sym  => id_complex })
+            intermediate_table(instance).insert({ instance.class.name.to_sym => hash_all_attr[:id], self.class.name.to_sym  => id_complex })
         end
         hash_all_attr.except(attr_name)
     end
 
     def refresh!(saved_value, attr_name, instance)
-        ids = intermediate_table(instance.class.name).entries.select {|entry| entry[instance.class.name.to_sym] == instance.id}
-        values = ids.reduce([]) { |result, entry|
+        values = intermediate_values(instance).reduce([]) { |result, entry|
             result << @type.find_by_id(entry[self.class.name.to_sym]).first
             result
         }
         instance.send(attr_name.to_s + "=", values)
     end
 
-    def intermediate_table(class_name)
-        TADB::DB.table(self.class.name + class_name)
+    def intermediate_table(instance)
+        TADB::DB.table(self.class.name + instance.class.name)
+    end
+
+    def intermediate_values(instance)
+        intermediate_table(instance).entries.select {|entry| entry[instance.class.name.to_sym] == instance.id}
+    end
+
+    def forget!(attr, instance)
+        ids = intermediate_values(instance).reduce([]) { |result, entry|
+            result << entry[:id]
+            result
+        }
+        ids.each do |id|
+            intermediate_table(instance).delete(id)
+        end
+        attr.each do |value|
+            value.forget!
+        end
     end
 end
 
