@@ -58,10 +58,9 @@ module ORM
         if self.is_a?(Class)
             all_instances += self.new.table.entries.collect do |entry|
                 instance = self.new
-                entry.each do |attribute_name, saved_value|
-                    db_type = self.persistent_attributes[attribute_name]
-                    value =  db_type.class == OneComplexDbType || db_type.class == ManyComplexDbType ? db_type.type.find_by_id(saved_value).first : saved_value  #agrego el first pq find_by_id devuelve un array
-                    instance.send(attribute_name.to_s + "=", value)
+                self.persistent_attributes.each do |attr_name, db_type|
+                    saved_value = db_type.all_instances(entry[attr_name], instance)
+                    instance.send(attr_name.to_s + "=", saved_value)
                 end
                 instance
             end

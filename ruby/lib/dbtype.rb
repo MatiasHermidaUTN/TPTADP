@@ -29,6 +29,10 @@ module SimpleType
 
     def forget!(attr, instance)
     end
+
+    def all_instances(saved_value, instance)
+        saved_value
+    end
 end
 
 module DbType
@@ -80,6 +84,10 @@ class OneComplexDbType
     def forget!(attr, instance)
         attr.forget!
     end
+
+    def all_instances(saved_value, instance)
+        @type.find_by_id(saved_value).first
+    end
 end
 
 class ManyComplexDbType
@@ -97,21 +105,21 @@ class ManyComplexDbType
         hash_all_attr[:id] ||= SecureRandom.uuid
         hash_all_attr[attr_name].each do |value|
             id_complex = value.save!
-            intermediate_table(instance).insert({ instance.class.name.to_sym => hash_all_attr[:id], self.class.name.to_sym  => id_complex })
+            intermediate_table(instance).insert({ instance.class.name.to_sym => hash_all_attr[:id], @type.name.to_sym  => id_complex })
         end
         hash_all_attr.except(attr_name)
     end
 
     def refresh!(saved_value, attr_name, instance)
         values = intermediate_values(instance).reduce([]) { |result, entry|
-            result << @type.find_by_id(entry[self.class.name.to_sym]).first
+            result << @type.find_by_id(entry[@type.name.to_sym]).first
             result
         }
         instance.send(attr_name.to_s + "=", values)
     end
 
     def intermediate_table(instance)
-        TADB::DB.table(self.class.name + instance.class.name)
+        TADB::DB.table(instance.class.name + @type.name)
     end
 
     def intermediate_values(instance)
@@ -129,6 +137,14 @@ class ManyComplexDbType
         attr.each do |value|
             value.forget!
         end
+    end
+
+    def all_instances(saved_value, instance)
+        ids = intermediate_values(instance)
+        ids.reduce([]) { |result, entry|
+            result << @type.find_by_id(entry[@type.name.to_sym]).first
+            result
+        }
     end
 end
 
