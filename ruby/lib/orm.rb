@@ -8,43 +8,42 @@ module ORM
     def has_db(db_type)
         attr_accessor db_type.name, :id
         self.add_persistent_attribute!(db_type.name => db_type)
-        include Persistent
         self.init_descendant_registration
+        include Persistent
 
-        self.define_method(:initialize) do
-            self.class.persistent_attributes.each{|attr_name, db_type|
-                if (attr_name != :id && !db_type.default.nil?)
-                    self.send(attr_name.to_s + "=", db_type.default)
+        define_method(:initialize) do
+            self.class.persistent_attributes.each do |attr_name, db_type|
+                if attr_name != :id && !db_type.default.nil?
+                    send(attr_name.to_s + "=", db_type.default)
                 end
-            }
+            end
+            super()
         end
+    end
+
+    def init_descendant_registration
+        define_singleton_method(:descendants) do
+            @descendants ||= []
+        end
+        define_singleton_method(:included) { |descendant|
+            self.descendants.push(descendant)
+        }
+        define_singleton_method(:inherited) { |descendant|
+            self.descendants.push(descendant)
+        }
     end
 
     def has_one(type, description)
         self.has_db(is_complex_type?(type) ? OneComplexDbType.new(type, description) : OneSimpleDbType.new(type, description))
     end
 
-    def init_descendant_registration
-        def self.included(descendant)
-            @descendants ||= []
-            @descendants << descendant
-        end
-        def self.inherited(descendant)
-            @descendants ||= []
-            @descendants << descendant
-        end
-        def self.descendants
-            @descendants ||= []
-        end
-    end
-
     def has_many(type, description)
         self.has_db(is_complex_type?(type) ? ManyComplexDbType.new(type, description) : ManySimpleDbType.new(type, description))
-        self.attr_accessor_has_many(description[:named])
+        self.attr_reader_has_many(description[:named])
     end
 
-    def attr_accessor_has_many(attribute_name)
-        self.define_method(attribute_name.to_s) do
+    def attr_reader_has_many(attribute_name)
+        define_method(attribute_name.to_s) do
             if self.instance_variable_get("@" + attribute_name.to_s).nil?
                 self.instance_variable_set("@" + attribute_name.to_s, [])
             else
@@ -74,7 +73,7 @@ module ORM
     end
 
     def method_missing(symbol, *args, &block)
-        if responds_to_find_by?(symbol)
+        if self.responds_to_find_by?(symbol)
             value = args[0]
             message = symbol.to_s.delete_prefix("find_by_")
             raise NotValidMethodForFindByError.new(self) if self.instance_method(message).arity > 0
@@ -95,9 +94,9 @@ module ORM
     end
 
     def persistent_attributes
-        db_type = OneSimpleDbType.new(String, { named: :id })
-        first_ancestor = self.ancestors[1]
-        @persistent_attributes ||= {id: db_type}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
+        id_db_type = OneSimpleDbType.new(String, { named: :id })
+        @persistent_attributes ||= {id: id_db_type}
+        self.ancestors.drop(1).reverse.flat_map { |ancestor| ancestor.persistent_attributes }.inject({}) { |result, ancestor| result.merge(ancestor) }.merge(@persistent_attributes)
     end
 
     # private

@@ -3,9 +3,9 @@ require_relative './validations'
 module ComplexType
     def validate_complex!(value, attr_name)
         raise AttrNotCorrectTypeError.new(attr_name) unless value.is_a?(@type)
-        if (!@validations.nil?)
+        unless @validations.nil?
             value.class.persistent_attributes.each do |key, db_type|
-                if (key != :id)
+                if key != :id
                     db_type.validate!(value.attributes_hash, key)
                 end
             end
@@ -16,7 +16,7 @@ end
 module SimpleType
     def validate_simple!(value, attr_name)
         raise AttrNotCorrectTypeError.new(attr_name) unless value.is_a?(@type)
-        if (!@validations.nil?)
+        unless @validations.nil?
             @validations.each do |validator|
                 validator.validate!(value)
             end
@@ -25,6 +25,10 @@ module SimpleType
 
     def save!(hash_all_attr, attr_name, instance)
         hash_all_attr
+    end
+
+    def refresh!(saved_value, attr_name, instance)
+        instance.send(attr_name.to_s + "=", saved_value)
     end
 
     def forget!(instance)
@@ -42,17 +46,17 @@ module DbType
         @type = type
         @default = description[:default]
         @validations = description.reduce([]) { |result, (validation, value)|
-            if (validation == :no_blank)
-                result << NoBlankValidation.new
+            if validation == :no_blank
+                result.push(NoBlankValidation.new)
             end
-            if (validation == :from)
-                result << FromValidation.new(value)
+            if validation == :from
+                result.push(FromValidation.new(value))
             end
-            if (validation == :to)
-                result << ToValidation.new(value)
+            if validation == :to
+                result.push(ToValidation.new(value))
             end
-            if (validation == :validate)
-                result << ValidateValidation.new(value)
+            if validation == :validate
+                result.push(ValidateValidation.new(value))
             end
             result
         }
@@ -152,10 +156,6 @@ class OneSimpleDbType
         validate_simple!(hash_all_attr[attr_name], attr_name)
         hash_all_attr
     end
-
-    def refresh!(saved_value, attr_name, instance)
-        instance.send(attr_name.to_s + "=", saved_value)
-    end
 end
 
 class ManySimpleDbType
@@ -167,9 +167,5 @@ class ManySimpleDbType
             validate_simple!(value, attr_name)
         end
         hash_all_attr
-    end
-
-    def refresh!(saved_value, attr_name, instance)
-        instance.send(attr_name.to_s + "=", saved_value)
     end
 end
