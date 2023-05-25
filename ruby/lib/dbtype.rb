@@ -27,7 +27,7 @@ module SimpleType
         hash_all_attr
     end
 
-    def forget!(attr, instance)
+    def forget!(instance)
     end
 
     def all_instances(saved_value, instance)
@@ -81,8 +81,7 @@ class OneComplexDbType
         instance.send(attr_name.to_s + "=", @type.find_by_id(saved_value).first)
     end
 
-    def forget!(attr, instance)
-        attr.forget!
+    def forget!(instance)
     end
 
     def all_instances(saved_value, instance)
@@ -126,16 +125,13 @@ class ManyComplexDbType
         intermediate_table(instance).entries.select {|entry| entry[instance.class.name.to_sym] == instance.id}
     end
 
-    def forget!(attr, instance)
+    def forget!(instance)
         ids = intermediate_values(instance).reduce([]) { |result, entry|
             result << entry[:id]
             result
         }
         ids.each do |id|
             intermediate_table(instance).delete(id)
-        end
-        attr.each do |value|
-            value.forget!
         end
     end
 
