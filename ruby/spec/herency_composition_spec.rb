@@ -69,6 +69,27 @@ describe 'Herency and Composition' do
             expect(s.refresh!.grades[0].value).to eq 8
             expect(s.refresh!.grades[1].value).to eq 6
         end
+        it "Agrego 2 grades, guardo y los borro" do
+            self.add_grade(8)
+            self.add_grade(5)
+            s.save!
+            s.forget!
+            expect(s.id).to be_nil
+        end
+
+        it "Agrego 2 grades, guardo y consigo todas sus instancias" do
+            self.add_grade(8)
+            self.add_grade(5)
+            s.save!
+            all_instances = StudentWithManyGrades.all_instances
+            expect(all_instances.length).to eq 1
+            expect(all_instances[0].ubicacion.x).to eq 1
+            expect(all_instances[0].ubicacion.y).to eq 2
+            expect(all_instances[0].full_name).to eq "leo sbaraglia"
+            expect(all_instances[0].grades.length).to eq 2
+            expect(all_instances[0].grades[0].value).to eq 8
+            expect(all_instances[0].grades[1].value).to eq 5
+        end
     end
 
     describe 'Herencia entre tipos' do
