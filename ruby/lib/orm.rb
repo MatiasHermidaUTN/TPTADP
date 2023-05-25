@@ -2,7 +2,7 @@ require 'tadb'
 require_relative './boolean'
 require_relative './persistent'
 require_relative './errors/not_valid_method_for_find_by_error'
-
+require_relative './dbtype'
 module ORM
     def has_db(db_type)
         attr_accessor db_type.name, :id

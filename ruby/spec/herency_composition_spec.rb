@@ -113,11 +113,11 @@ describe 'Herency and Composition' do
         end
         it "Existe tabla para clase StudentWithPersonMixin con attr suyos mas de Persona" do
             expect{StudentWithPersonMixin.new.table}.to_not raise_error NoMethodError
-            expect(StudentWithPersonMixin.persistent_attr_types.keys).to eq [:id, :full_name, :grade]
+            expect(StudentWithPersonMixin.persistent_attributes.keys).to eq [:id, :full_name, :grade]
         end
         it "Existe tabla para clase AssistantProfessor con attr suyos mas de StudentWithPersonMixin" do
             expect{AssistantProfessor.new.table}.to_not raise_error NoMethodError
-            expect(AssistantProfessor.persistent_attr_types.keys).to eq [:id, :full_name, :grade, :type]
+            expect(AssistantProfessor.persistent_attributes.keys).to eq [:id, :full_name, :grade, :type]
         end
 
         it "Obtener todas las instancias del modulo PersonMixin trae las instancias de sus clases descendientes" do
