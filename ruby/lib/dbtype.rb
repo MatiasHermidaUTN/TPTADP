@@ -4,6 +4,9 @@ module ComplexType
     def validate_complex!(value, attr_name)
         raise AttrNotCorrectTypeError.new(attr_name) unless value.is_a?(@type)
         unless @validations.nil?
+            @validations.each do |validator|
+                validator.validate!(value)
+            end
             value.class.persistent_attributes.each do |key, db_type|
                 if key != :id
                     db_type.validate!(value.attributes_hash, key)
@@ -45,7 +48,7 @@ module DbType
         @name = description[:named]
         @type = type
         @default = description[:default]
-        @validations = description.reduce([]) { |result, (validation, value)|
+        @validations = description.reduce([]) do |result, (validation, value)|
             if validation == :no_blank
                 result.push(NoBlankValidation.new)
             end
@@ -59,7 +62,7 @@ module DbType
                 result.push(ValidateValidation.new(value))
             end
             result
-        }
+        end
     end
 
     def validate_default!(hash_all_attr, attr_name)
