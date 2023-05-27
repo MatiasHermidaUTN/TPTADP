@@ -27,6 +27,6 @@ class ValidateValidation
         @validate = validate
     end
     def validate!(value)
-        raise ValidationError.new(self) unless @validate.call(value)
+        raise ValidationError.new(self) unless value.instance_exec(&@validate)
     end
 end

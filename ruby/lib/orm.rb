@@ -33,11 +33,11 @@ module ORM
     end
 
     def has_one(type, description)
-        self.has_db(is_complex_type?(type) ? OneComplexDbType.new(type, description) : OneSimpleDbType.new(type, description))
+        self.has_db(OneDbType.new(type, description))
     end
 
     def has_many(type, description)
-        self.has_db(is_complex_type?(type) ? ManyComplexDbType.new(type, description) : ManySimpleDbType.new(type, description))
+        self.has_db(ManyDbType.new(type, description))
         self.attr_reader_has_many(description[:named])
     end
 
@@ -88,14 +88,10 @@ module ORM
         self.responds_to_find_by?(symbol) || super
     end
 
-    def is_complex_type?(type)
-        ![Numeric, String, Boolean].include?(type)
-    end
-
     def persistent_attributes
-        id_db_type = OneSimpleDbType.new(String, { named: :id })
-        @persistent_attributes ||= {id: id_db_type}
-        self.ancestors.drop(1).reverse.flat_map { |ancestor| ancestor.persistent_attributes }.inject({}) { |result, ancestor| result.merge(ancestor) }.merge(@persistent_attributes)
+        db_type = OneDbType.new(String, { named: :id })
+        first_ancestor = self.ancestors[1]
+        @persistent_attributes ||= {id: db_type}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
     end
 
     # private
