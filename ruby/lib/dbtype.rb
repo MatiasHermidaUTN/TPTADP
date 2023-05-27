@@ -39,7 +39,8 @@ class OneDbType
     end
 
     def save!(hash_all_attr, attr_name, instance)
-        @complexity.save!(hash_all_attr, attr_name)
+        hash_all_attr[attr_name] = @complexity.save!(hash_all_attr[attr_name])
+        hash_all_attr
     end
 
     def refresh!(saved_value, attr_name, instance)
@@ -50,7 +51,7 @@ class OneDbType
     end
 
     def all_instances(saved_value, instance)
-        @complexity.all_instances(saved_value, instance)
+        @complexity.all_instances(saved_value)
     end
 end
 
@@ -67,7 +68,7 @@ class ManyDbType
     def save!(hash_all_attr, attr_name, instance)
         hash_all_attr[:id] ||= SecureRandom.uuid
         hash_all_attr[attr_name].each do |value|
-            id_complex = value.save!
+            id_complex = @complexity.save!(value)
             intermediate_table(instance).insert({ instance.class.name.to_sym => hash_all_attr[:id], @type.name.to_sym  => id_complex })
         end
         hash_all_attr.except(attr_name)
@@ -75,7 +76,7 @@ class ManyDbType
 
     def refresh!(saved_value, attr_name, instance)
         values = intermediate_values(instance).reduce([]) { |result, entry|
-            result << @type.find_by_id(entry[@type.name.to_sym]).first
+            result << @complexity.refresh!(entry[@type.name.to_sym], attr_name, instance)
             result
         }
         instance.send(attr_name.to_s + "=", values)
@@ -102,7 +103,7 @@ class ManyDbType
     def all_instances(saved_value, instance)
         ids = intermediate_values(instance)
         ids.reduce([]) { |result, entry|
-            result << @type.find_by_id(entry[@type.name.to_sym]).first
+            result << @complexity.all_instances(entry[@type.name.to_sym])
             result
         }
     end

@@ -21,16 +21,17 @@ class ComplexType
     end
   end
 
-  def save!(hash_all_attr, attr_name)
-    hash_all_attr[attr_name] = hash_all_attr[attr_name].save!
-    hash_all_attr
+  def save!(value)
+    value.save!
   end
 
   def refresh!(saved_value, attr_name, instance)
-    instance.send(attr_name.to_s + "=", @type.find_by_id(saved_value).first)
+    value = @type.find_by_id(saved_value).first
+    instance.send(attr_name.to_s + "=", value)
+    value
   end
 
-  def all_instances(saved_value, instance)
+  def all_instances(saved_value)
     @type.find_by_id(saved_value).first
   end
 end
@@ -47,15 +48,16 @@ class SimpleType
     end
   end
 
-  def save!(hash_all_attr, attr_name)
-    hash_all_attr
+  def save!(value)
+    value
   end
 
   def refresh!(saved_value, attr_name, instance)
     instance.send(attr_name.to_s + "=", saved_value)
+    saved_value
   end
 
-  def all_instances(saved_value, instance)
+  def all_instances(saved_value)
     saved_value
   end
 end

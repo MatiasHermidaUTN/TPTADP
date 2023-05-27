@@ -72,6 +72,10 @@ class StudentWithDefault
   has_one Grade, named: :grade, default: Grade.new, no_blank: true
 end
 
+class Box
+  has_many Numeric, named: :points
+end
+
 module Algo
   has_one String, named: :full_name
 end

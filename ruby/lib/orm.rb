@@ -89,9 +89,9 @@ module ORM
     end
 
     def persistent_attributes
-        db_type = OneDbType.new(String, { named: :id })
-        first_ancestor = self.ancestors[1]
-        @persistent_attributes ||= {id: db_type}.merge(first_ancestor.respond_to?(:persistent_attributes) ? first_ancestor.persistent_attributes : {} )
+        id_db_type = OneDbType.new(String, { named: :id })
+        @persistent_attributes ||= {id: id_db_type}
+        ancestors.drop(1).reverse.flat_map(&:persistent_attributes).inject({}, &:merge).merge(@persistent_attributes)
     end
 
     # private

@@ -168,4 +168,38 @@ describe 'Herency and Composition' do
         end
     end
 
+    describe "More tests" do
+        let(:box) { Box.new }
+
+        before do
+            box.points.push(1)
+            box.points.push(2)
+            box.save!
+        end
+
+        it "Se debe de haber guardado" do
+            expect(box.id).to_not be_nil
+            expect(box.points[0]).to eql 1
+            expect(box.points[1]).to eql 2
+        end
+
+        it "All instances funcionando correctamente" do
+          instances = Box.all_instances
+          expect(instances[0].points[0]).to eql 1
+          expect(instances[0].points[1]).to eql 2
+        end
+
+        it "Forget! funcionando correctamente" do
+          box.forget!
+          expect(box.id).to be_nil
+        end
+
+        it "Refresh! funcionando correctamente" do
+            box.points = []
+            box.refresh!
+            expect(box.points[0]).to eql 1
+            expect(box.points[1]).to eql 2
+        end
+    end
+
 end
