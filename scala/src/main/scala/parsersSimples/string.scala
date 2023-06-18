@@ -2,7 +2,7 @@ package parsersSimples
 
 import scala.util.Try
 
-class string(texto: String) extends Parser(){
+case class string(texto: String) extends Parser(){
   override def parsear(input: String): Try[Any] = {
     Try(input).map {
       case palabra: String if palabra.substring(0, texto.length).equals(texto)

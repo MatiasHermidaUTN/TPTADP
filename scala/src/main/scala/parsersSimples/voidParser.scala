@@ -2,7 +2,7 @@ package parsersSimples
 
 import scala.util.Try
 
-class voidParser extends Parser {
+case class voidParser() extends Parser {
   override def parsear(input: String): Try[Any] = {
     val anyChar = new anyChar
     anyChar.parsear(input).map( _ => () )
