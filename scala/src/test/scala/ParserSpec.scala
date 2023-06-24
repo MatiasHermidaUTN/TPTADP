@@ -62,7 +62,7 @@ class ParserSpec extends AnyFreeSpec {
         val result = voidParser.parse("r")
         result match {
           case Success(value) => {
-            value.parsedValue shouldEqual()
+            value.parsedValue shouldEqual ()
             value.rest shouldEqual ""
           }
         }
