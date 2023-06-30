@@ -1,7 +1,7 @@
 import scala.util.{Failure, Success, Try}
 
-case class satisfiesParser(firstParser: Parser, condition: String => Boolean) extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case class satisfiesParser[T](firstParser: Parser[T], condition: String => Boolean) extends Parser[T] {
+  override def parseo(text: String): Try[successParse[T]] = {
     Try {
       val result = firstParser.parse(text).get
       if (!condition.apply(result.parsedValue.toString())) {
@@ -12,22 +12,21 @@ case class satisfiesParser(firstParser: Parser, condition: String => Boolean) ex
   }
 }
 
-case class optionalParser(parser: Parser) extends Parser {
-  override def parseo(text: String): Try[successParse] = parser.parse(text)
-  override def returnParseo(result: Try[successParse], text: String): Try[successParse] = {
+case class optionalParser[T](parser: Parser[T]) extends Parser[Either[T, Unit]] {
+  override def parseo(text: String): Try[successParse[Either[T, Unit]]] = {
     Try {
-      result match {
-        case Success(successResult) => successResult
-        case Failure(_) => successParse((), text)
+      parser.parse(text) match {
+        case Success(successResult) => successParse(Left(successResult.parsedValue), successResult.rest)
+        case Failure(_) => successParse(Right(()), text)
       }
     }
   }
 }
 
-case class kleeneParser(parser: Parser) extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case class kleeneParser[T](parser: Parser[T]) extends Parser[List[T]] {
+  override def parseo(text: String): Try[successParse[List[T]]] = {
     Try {
-      var results: List[Any] = List.empty
+      var results: List[T] = List.empty
       var rest: String = text
       var parseResult = parser.parse(text)
       while (parseResult.isSuccess) {
@@ -37,6 +36,48 @@ case class kleeneParser(parser: Parser) extends Parser {
         parseResult = parser.parse(rest)
       }
       successParse(results, rest)
+    }
+  }
+}
+
+case class strictKleeneParser[T](kleene: Parser[List[T]]) extends Parser[List[T]] {
+  override def parseo(text: String): Try[successParse[List[T]]] = {
+    Try {
+      val resultParse = kleene.parse(text).get
+      if (resultParse.parsedValue.length == 0) {
+        throw new RuntimeException("Fallo")
+      }
+      resultParse
+    }
+  }
+}
+
+case class sepByParser[T, U](contenido: Parser[T], separador: Parser[U]) extends Parser[List[List[T]]] {
+  override def parseo(text: String): Try[successParse[List[List[T]]]] = {
+    Try {
+      val parser = contenido.+
+      val responseParser = parser.parse(text).get
+      val parserConSeparador = (separador ~> parser).+
+      val resultadoParserConSeparador = parserConSeparador.parse(responseParser.rest).get
+      successParse(List(responseParser.parsedValue) ::: resultadoParserConSeparador.parsedValue, resultadoParserConSeparador.rest)
+    }
+  }
+}
+
+case class constParser[U, T](parser: Parser[T], constant: U) extends Parser[U] {
+  override def parseo(text: String): Try[successParse[U]] = {
+    Try {
+      val result = parser.parse(text).get
+      successParse(constant, result.rest)
+    }
+  }
+}
+
+case class mapParser[U, T](parser: Parser[T], mapper: T => U) extends Parser[U] {
+  override def parseo(text: String): Try[successParse[U]] = {
+    Try {
+      val result = parser.parse(text).get
+      successParse(mapper.apply(result.parsedValue), result.rest)
     }
   }
 }

@@ -1,12 +1,12 @@
-import scala.util.{Failure, Success, Try}
+import scala.util.{Try}
 
-case class anyChar() extends Parser {
-  override def parseo(text: String): Try[successParse] =
-    Try (successParse(text(0), text.substring(1)))
+case object anyChar extends Parser[Char] {
+  override def parseo(text: String): Try[successParse[Char]] =
+    Try(successParse(text(0), text.substring(1)))
 }
 
-case class char(char: Char) extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case class char(char: Char) extends Parser[Char] {
+  override def parseo(text: String): Try[successParse[Char]] = {
     Try {
       if (!text.startsWith(char.toString())) {
         throw new RuntimeException("Fallo")
@@ -16,13 +16,13 @@ case class char(char: Char) extends Parser {
   }
 }
 
-case class void() extends Parser {
-  override def parseo(text: String): Try[successParse] =
+case object void extends Parser[Unit] {
+  override def parseo(text: String): Try[successParse[Unit]] =
     Try(successParse((), text.substring(1)))
 }
 
-case class letter() extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case object letter extends Parser[Char]  {
+  override def parseo(text: String): Try[successParse[Char]] = {
     Try {
       val char = text(0)
       if (!char.toString().matches("[a-zA-Z]")) {
@@ -33,8 +33,8 @@ case class letter() extends Parser {
   }
 }
 
-case class digit() extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case object digit extends Parser[Char] {
+  override def parseo(text: String): Try[successParse[Char]] = {
     Try {
       val char = text(0)
       if (!char.toString().matches("\\d")) {
@@ -45,18 +45,27 @@ case class digit() extends Parser {
   }
 }
 
-case class alphNum() extends Parser {
-  override def parseo(text: String): Try[successParse] =
-    letter().parse(text) orElse digit().parse(text)
+case object alphNum extends Parser[Char] {
+  override def parseo(text: String): Try[successParse[Char]] =
+    letter.parse(text) orElse digit.parse(text)
 }
 
-case class string(string: String) extends Parser {
-  override def parseo(text: String): Try[successParse] = {
+case class string(string: String) extends Parser[String] {
+  override def parseo(text: String): Try[successParse[String]] = {
     Try {
       if (!text.startsWith(string)) {
         throw new RuntimeException("Fallo")
       }
       successParse(string, text.substring(string.length))
+    }
+  }
+}
+
+case object integer extends Parser[Int] {
+  override def parseo(text: String): Try[successParse[Int]] = {
+    Try {
+      val result = digit.+.parse(text).get
+      successParse(result.parsedValue.mkString("").toInt, result.rest)
     }
   }
 }

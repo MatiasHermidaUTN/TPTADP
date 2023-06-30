@@ -10,13 +10,13 @@ class OperationsBetweenParsersSpec extends AnyFreeSpec {
       "Si el string se parsea por A funciona, deberia devolver el resultado de A." in {
         val result = aob.parse("antonio")
         result match {
-          case Success(value) => value.parsedValue shouldBe 'a'
+          case Success(value) => value.parsedValue shouldBe Left('a')
         }
       }
       "Si el string se parsea por B funciona, deberia devolver el resultado de B." in {
         val result = aob.parse("bebe")
         result match {
-          case Success(value) => value.parsedValue shouldBe 'b'
+          case Success(value) => value.parsedValue shouldBe Right('b')
         }
       }
       "Si el string no se parsea ni en A ni en B, deberia de throwear." in {

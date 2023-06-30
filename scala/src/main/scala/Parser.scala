@@ -1,33 +1,26 @@
 import scala.util.{Try}
 
-case class successParse(parsedValue: Any, rest: String)
+case class successParse[T](parsedValue: T, rest: String)
 
-abstract class Parser {
-  def opt(): Parser = optionalParser(this)
-
-  def parse(text: String): Try[successParse] = {
+abstract class Parser[T] {
+  def opt() = optionalParser(this)
+  def parse(text: String): Try[successParse[T]] = {
     Try {
-      val trimmedText = text.trim
-      if ("".equals(trimmedText)) {
+      if ("".equals(text)) {
         throw new RuntimeException("Fallo")
       }
-      val parseResult = parseo(trimmedText)
-      return returnParseo(parseResult, text)
+      return parseo(text)
     }
   }
-  def returnParseo(result: Try[successParse], text: String): Try[successParse] = result
-  def parseo(text: String): Try[successParse]
-  def <|>(otherParser: Parser): Parser = or(this, otherParser)
-
-  def <>(otherParser: Parser): Parser = concat(this, otherParser)
-
-  def ~>(otherParser: Parser): Parser = rightMost(this, otherParser)
-
-  def <~(otherParser: Parser): Parser = leftMost(this, otherParser)
-
-  def satisfies(condition: String => Boolean) = satisfiesParser(this, condition)
-
-  def *(): Parser = kleeneParser(this)
-
-  def +(): Parser = strictKleeneParser(this.*)
+  def parseo(text: String): Try[successParse[T]]
+  def <|>[U](otherParser: Parser[U]) = or(this, otherParser)
+  def <>[U](otherParser: Parser[U]) = concat(this, otherParser)
+  def ~>[U](otherParser: Parser[U]) = rightMost(this, otherParser)
+  def <~[U](otherParser: Parser[U]) = leftMost(this, otherParser)
+  def satisfies(condition: String => Boolean): satisfiesParser[T] = satisfiesParser(this, condition)
+  def *(): Parser[List[T]] = kleeneParser(this)
+  def +(): Parser[List[T]] = strictKleeneParser(this.*)
+  def sepBy[U](separator: Parser[U]) = sepByParser(this, separator)
+  def const[U](constant: U) = constParser(this, constant)
+  def map[U](mapper: T => U) = mapParser(this, mapper)
 }

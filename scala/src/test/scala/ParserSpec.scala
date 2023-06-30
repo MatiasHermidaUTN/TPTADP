@@ -6,7 +6,7 @@ import scala.util.{Failure, Success}
 class ParserSpec extends AnyFreeSpec {
   "Parsers Basicos" - {
     "AnyCharParser" - {
-      val anyCharParser = anyChar()
+      val anyCharParser = anyChar
       "Si el string tiene caracteres, deberia devolver el primero de todos." in {
         val result = anyCharParser.parse("tadp")
         result match {
@@ -18,12 +18,6 @@ class ParserSpec extends AnyFreeSpec {
       }
       "Si el string no tiene caracteres, deberia de throwear." in {
         val result = anyCharParser.parse("")
-        result match {
-          case Failure(exception) => exception.getMessage shouldBe "Fallo"
-        }
-      }
-      "Si el string solo tiene espacios, deberia de throwear." in {
-        val result = anyCharParser.parse("      ")
         result match {
           case Failure(exception) => exception.getMessage shouldBe "Fallo"
         }
@@ -57,7 +51,7 @@ class ParserSpec extends AnyFreeSpec {
     }
 
     "VoidParser" - {
-      val voidParser = void()
+      val voidParser = void
       "Si el string contiene un caracter, devuelve Unit." in {
         val result = voidParser.parse("r")
         result match {
@@ -85,7 +79,7 @@ class ParserSpec extends AnyFreeSpec {
     }
 
     "LetterParser" - {
-      val letterParser = letter()
+      val letterParser = letter
       "Si el string contiene solo letras, devuelve el primer caracter." in {
         val result = letterParser.parse("hola")
         result match {
@@ -120,7 +114,7 @@ class ParserSpec extends AnyFreeSpec {
   }
 
   "DigitParser" - {
-    val digitParser = digit()
+    val digitParser = digit
     "Si el string contiene solo numeros, devuelve el primer caracter." in {
       val result = digitParser.parse("1234")
       result match {
@@ -154,7 +148,7 @@ class ParserSpec extends AnyFreeSpec {
   }
 
   "AlphNumParser" - {
-    val alphNumParser = alphNum()
+    val alphNumParser = alphNum
     "Si el string contiene solo numeros, devuelve el primer caracter." in {
       val result = alphNumParser.parse("1234")
       result match {
