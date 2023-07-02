@@ -1,4 +1,4 @@
-import BasicParsers.{alphaNum, anyChar, char, digit, letter, string, void}
+import BasicParsers.{alphaNum, anyChar, char, digit, letter, number, string, void}
 import org.scalatest.matchers.should.Matchers._
 import org.scalatest.freespec.AnyFreeSpec
 
@@ -169,19 +169,54 @@ class ProjectSpec extends AnyFreeSpec {
       }
     }
     "plus" - {
-      val plusParser = char('c').+
-      "dado un parser char('c') de kleene que recibe cccasa, retorna Success con (List('c','c','c'), asa)" in {
-        val Success(result) =plusParser.parse("cccasa")
+      val charPlusParser = char('c').+
+      val stringPlusParser = string("cha").+
+      "dado un parser char('c') de kleene+ que recibe cccasa, retorna Success con (List('c','c','c'), asa)" in {
+        val Success(result) = charPlusParser.parse("cccasa")
         result shouldBe (List('c','c','c'), "asa")
       }
-      "dado un parser char('c') de kleene que recibe burt, retorna Failure" in {
-        val Failure(exception) = plusParser.parse("burt")
-        exception.getMessage shouldBe "El elemento no empieza con el caracter a buscar"
+      "dado un parser string('cha') de kleene+ que recibe chachachan, retorna Success con (List(cha,cha,cha), n)" in {
+        val Success(result) = stringPlusParser.parse("chachachan")
+        result shouldBe (List("cha","cha","cha"), "n")
+      }
+      "dado un parser char('c') de kleene+ que recibe burt, retorna Failure" in {
+        val Failure(exception) = charPlusParser.parse("burt")
+        exception.getMessage shouldBe "No se encontraron 1 o mas casos"
       }
     }
     "sepBy" - {
-      val integer = digit().+
-
+      val integer = number().+
+      val numeroDeTelefono = integer.sepBy(char('-'))
+      "dado un parser number de kleene+ separados por - que recibe 4356-1234, retorna Success con (List(List(4,3,5,6), List(1,2,3,4)), )" in {
+        val Success(result) = numeroDeTelefono.parse("4356-1234")
+        result shouldBe (List(List(4,3,5,6), List(1,2,3,4)), "")
+      }
+      "dado un parser number de kleene+ por - que recibe 4356 1234, retorna Failure" in {
+        val Failure(exception) = numeroDeTelefono.parse("4356 1234")
+        exception.getMessage shouldBe "El elemento no empieza con el caracter a buscar"
+      }
+    }
+    "const" - {
+      val trueParser = string("true").const(true)
+      "dado un parser string(true) con constantes el valor bool true que recibe true (str), retorna Success con (true (bool), )" in {
+        val Success(result) = trueParser.parse("true")
+        result shouldBe (true, "")
+      }
+      "dado un parser string(true) con constantes el valor bool true que recibe untrue (str), retorna Failure" in {
+        val Failure(exception) = trueParser.parse("untrue")
+        exception.getMessage shouldBe "El elemento no empieza con el string a buscar"
+      }
+    }
+    "map" - {
+      case class Persona(nombre: String, apellido: String)
+      val personaParser = (alphaNum.* <> (char(' ') ~> alphaNum.*))
+        .map { case (nombre, apellido) => Persona(nombre.mkString, apellido.mkString) }
+      "dado un parser a Persona que recibe Nestor Ortigoza, retorna Success con Persona(Nestor, Ortigoza)" in {
+        val Success((value, rest)) = personaParser.parse("Nestor Ortigoza")
+        value.nombre shouldBe "Nestor"
+        value.apellido shouldBe "Ortigoza"
+        rest shouldBe ""
+      }
     }
   }
 }

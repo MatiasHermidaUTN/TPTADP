@@ -48,6 +48,17 @@ object BasicParsers {
     }
   }
 
+  case class number() extends Parser[Int]  {
+    override def parseFunction(elementToParse: String) : SuccessParse[Int] = {
+      val result = stringMatches(
+        elementToParse.charAt(0).toString(),
+        "[0-9]",
+        new RuntimeException("El elemento no empieza con un numero")
+      ).charAt(0).asDigit
+      (result, stringTail(elementToParse))
+    }
+  }
+
   val alphaNum = letter() <|> digit()
 
   case class string(stringToFind: String) extends Parser[String]  {
@@ -55,7 +66,7 @@ object BasicParsers {
       stringMatches(
         elementToParse,
         s"$stringToFind.*",
-        new RuntimeException("El elemento no empieza con una letra")
+        new RuntimeException("El elemento no empieza con el string a buscar")
       )
       (stringToFind, elementToParse.replaceFirst(stringToFind, ""))
     }

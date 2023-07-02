@@ -16,9 +16,9 @@ object CombinableParsers {
   case class concat[T, U](aParser: Parser[T], anotherParser: Parser[U]) extends Parser[(T,U)] {
     override def parseFunction(elementToParse: String): SuccessParse[(T,U)] = {
       val result = for {
-        result1 <- aParser.parse(elementToParse)
-        result2 <- anotherParser.parse(result1._2)
-      } yield ((result1._1, result2._1), result2._2)
+        (value1, rest1) <- aParser.parse(elementToParse)
+        (value2, rest2) <- anotherParser.parse(rest1)
+      } yield ((value1, value2), rest2)
       expandTry(result, new RuntimeException("El elemento no satisface el parser concatenado"))
     }
   }
@@ -26,9 +26,9 @@ object CombinableParsers {
   case class rightMost[T, U](aParser: Parser[T], anotherParser: Parser[U]) extends Parser[U] {
     override def parseFunction(elementToParse: String): SuccessParse[U] = {
       val result = for {
-        result1 <- aParser.parse(elementToParse)
-        result2 <- anotherParser.parse(result1._2)
-      } yield (result2._1, result2._2)
+        (_, rest1) <- aParser.parse(elementToParse)
+        (value2, rest2) <- anotherParser.parse(rest1)
+      } yield (value2, rest2)
       expandTry(result, new RuntimeException("El elemento no satisface el parser concatenado"))
     }
   }
@@ -36,9 +36,9 @@ object CombinableParsers {
   case class leftMost[T, U](aParser: Parser[T], anotherParser: Parser[U]) extends Parser[T] {
     override def parseFunction(elementToParse: String): SuccessParse[T] = {
       val result = for {
-        result1 <- aParser.parse(elementToParse)
-        result2 <- anotherParser.parse(result1._2)
-      } yield (result1._1, result2._2)
+        (value1, rest1) <- aParser.parse(elementToParse)
+        (_, rest2) <- anotherParser.parse(rest1)
+      } yield (value1, rest2)
       expandTry(result, new RuntimeException("El elemento no satisface el parser concatenado"))
     }
   }

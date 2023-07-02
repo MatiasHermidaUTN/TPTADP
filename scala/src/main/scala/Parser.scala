@@ -1,5 +1,5 @@
 import CombinableParsers.{concat, leftMost, or, rightMost}
-import OperationsParsers.{kleene, optional, plus, satisfy, separator}
+import OperationsParsers.{constant, kleene, mapped, optional, plus, satisfy, separator}
 import ExceptionsHelper.throwExceptionIfCondition
 
 import scala.util.Try
@@ -33,6 +33,8 @@ object Parser {
     def +(): Parser[List[T]] = plus(this)
 
     def sepBy[U](sepParser: Parser[U]): Parser[List[T]] = separator(this, sepParser)
+    def const[U](value: U): Parser[U] = constant(this, value)
+    def map[U](transform: T => U): Parser[U] = mapped(this, transform)
 
   }
 }
