@@ -136,5 +136,52 @@ class ProjectSpec extends AnyFreeSpec {
       }
     }
   }
+  "Parsers Operations" - {
+    "satisfies" - {
+      "dado un parser string(hola) que satisface si el elemento parseado tiene mas de 3 caracteres y recibe holamundo, retorna Success con hola" in {
+        val holaParser = string("hola").satisfies(_.length > 3)
+        val Success(result) = holaParser.parse("holamundo")
+        result shouldBe ("hola", "mundo")
+      }
+      "dado un parser string(hola) que satisface si el elemento parseado tiene mas de 3 caracteres y recibe holamundo, retorna Failure" in {
+        val holaParser = string("hol").satisfies(_.length > 3)
+        val Failure(exception) = holaParser.parse("holamundo")
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
+      }
+    }
+    "opt" - {
+      "dado un parser opcional string(in), concatenado con un parser string(fija) que recibe fija, retorna Success con None y resto fija" in {
+        val talVezIn = string("in").opt
+        val precedencia = talVezIn <> string("fija")
+        val Success(result) = precedencia.parse("fija")
+        result shouldBe ((None, "fija"), "")
+      }
+    }
+    "kleene" - {
+      val kleeneParser = char('c').*
+      "dado un parser char('c') de kleene que recibe cccasa, retorna Success con (List('c','c','c'), asa)" in {
+        val Success(result) =kleeneParser.parse("cccasa")
+        result shouldBe (List('c','c','c'), "asa")
+      }
+      "dado un parser char('c') de kleene que recibe burt, retorna Success con (List.empty, burt)" in {
+        val Success(result) = kleeneParser.parse("burt")
+        result shouldBe (List.empty, "burt")
+      }
+    }
+    "plus" - {
+      val plusParser = char('c').+
+      "dado un parser char('c') de kleene que recibe cccasa, retorna Success con (List('c','c','c'), asa)" in {
+        val Success(result) =plusParser.parse("cccasa")
+        result shouldBe (List('c','c','c'), "asa")
+      }
+      "dado un parser char('c') de kleene que recibe burt, retorna Failure" in {
+        val Failure(exception) = plusParser.parse("burt")
+        exception.getMessage shouldBe "El elemento no empieza con el caracter a buscar"
+      }
+    }
+    "sepBy" - {
+      val integer = digit().+
 
+    }
+  }
 }

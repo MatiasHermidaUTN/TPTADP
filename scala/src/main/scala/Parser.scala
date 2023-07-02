@@ -1,5 +1,5 @@
 import CombinableParsers.{concat, leftMost, or, rightMost}
-import OperationsParsers.{satisfy}
+import OperationsParsers.{kleene, optional, plus, satisfy, separator}
 import ExceptionsHelper.throwExceptionIfCondition
 
 import scala.util.Try
@@ -23,11 +23,16 @@ object Parser {
     def parseFunction(elementToParse: String): SuccessParse[T]
 
     def <|>(otherParser: Parser[T]): Parser[T] = or(this, otherParser)
-    def <>(otherParser: Parser[T]): Parser[(T,T)] = concat(this, otherParser)
-    def ~>(otherParser: Parser[T]): Parser[T] = rightMost(this, otherParser)
-    def <~(otherParser: Parser[T]): Parser[T] = leftMost(this, otherParser)
+    def <>[U](otherParser: Parser[U]): Parser[(T,U)] = concat(this, otherParser)
+    def ~>[U](otherParser: Parser[U]): Parser[U] = rightMost(this, otherParser)
+    def <~[U](otherParser: Parser[U]): Parser[T] = leftMost(this, otherParser)
 
     def satisfies(condition: T => Boolean): Parser[T] = satisfy(this, condition)
+    def opt(): Parser[Option[T]] = optional(this)
+    def *(): Parser[List[T]] = kleene(this)
+    def +(): Parser[List[T]] = plus(this)
+
+    def sepBy[U](sepParser: Parser[U]): Parser[List[T]] = separator(this, sepParser)
 
   }
 }

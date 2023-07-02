@@ -1,8 +1,5 @@
 import ExceptionsHelper.throwExceptionIfCondition
-import Parser.{ParseFunction, Parser, SuccessParse}
-import ParsersHelper.orParsers
-
-import scala.util.{Failure, Success, Try}
+import Parser.{Parser, SuccessParse}
 
 object BasicParsers {
 
