@@ -13,7 +13,7 @@ object BasicParsers {
     override def parseFunction(elementToParse: String): SuccessParse[Char]  = {
       throwExceptionIfCondition(
         !elementToParse.startsWith(charToFind.toString),
-        new RuntimeException("El elemento no empieza con una letra")
+        new RuntimeException("El elemento no empieza con el caracter a buscar")
       )
       (charToFind, stringTail(elementToParse))
     }
