@@ -21,27 +21,19 @@ object MusicParser {
 
   case class tono() extends Parser[Tono] {
 
-    private def matchTono(tono: ((Int, Nota), Option[Char])): Tono = {
-      val ((octava, nota), alteration) = tono
-      alteration match {
-        case None => Tono(octava, nota)
-        case Some('#') => Tono(octava, nota.sostenido)
-        case Some('s') => Tono(octava, nota.sostenido)
-        case Some('b') => Tono(octava, nota.bemol)
-        case _ => throw new RuntimeException("La alteracion no existe")
-      }
-    }
-
     override def parseFunction(elementToParse: String): SuccessParse[Tono] = {
-      val tonoParser = number() <> nota() <> alteracion.opt
-      val (value, rest) = tonoParser.parseFunction(elementToParse)
-      (matchTono(value), rest)
+      val tonoParser = number() <> nota()
+      val ((octava, note), rest) = tonoParser.parseFunction(elementToParse)
+      (Tono(octava, note), rest)
     }
   }
 
+  val notaChar = char('C') <|> char('D') <|> char('E') <|> char('F') <|> char('G') <|> char('A') <|> char('B')
+
   case class nota() extends Parser[Nota] {
-    private def matchNoteChar(note: Char): Nota = {
-      note match {
+
+    private def matchNoteChar(noteChar: Char, alteration: Option[Char]): Nota = {
+      val note = noteChar match {
         case 'C' => C
         case 'D' => D
         case 'E' => E
@@ -51,10 +43,18 @@ object MusicParser {
         case 'B' => B
         case _ => throw new RuntimeException("La nota no existe")
       }
+      alteration match {
+        case None => note
+        case Some('#') => note.sostenido
+        case Some('s') => note.sostenido
+        case Some('b') => note.bemol
+        case _ => throw new RuntimeException("La alteracion no existe")
+      }
     }
     override def parseFunction(elementToParse: String): (Nota, String) = {
-      val (value, rest) = letter().parseFunction(elementToParse)
-      (matchNoteChar(value), rest)
+      val notaParser = notaChar <> alteracion.opt
+      val ((note, alteration), rest) = notaParser.parseFunction(elementToParse)
+      (matchNoteChar(note, alteration), rest)
     }
   }
 

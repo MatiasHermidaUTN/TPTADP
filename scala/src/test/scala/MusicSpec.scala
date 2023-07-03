@@ -45,7 +45,7 @@ class MusicSpec extends AnyFreeSpec {
     val melodiaDeEjemplo = List(
       Sonido(Tono(4, F), Corchea),
       Sonido(Tono(4, A), Corchea),
-      B.acordeMayor(4, Negra),
+      Gs.acordeMayor(4, Negra),
       Sonido(Tono(4, F), Corchea),
       Silencio(Blanca),
       Sonido(Tono(4, B), Blanca),
@@ -56,8 +56,9 @@ class MusicSpec extends AnyFreeSpec {
       Sonido(Tono(5, D.sostenido), Negra),
       Acorde(List(Tono(6, A), Tono(6, Cs), Tono(6, G)), Corchea),
     )
-    val melodiaAParsear = "4F1/8 4A1/8 4BM1/4 4F1/8 _ 4B1/2 4F1/8 4A1/8 4B1/4 5Cs1/16 5Ds1/4 6A+6C#+6G1/8"
-    "si recibo 4F1/8 4A1/8 4BM1/4 4F1/8 _ 4B1/2 4F1/8 4A1/8 4B1/4 5Cs1/16 5Ds1/4 5C1/2 deberia obtener la melodia de ejemplo" - {
+    val melodiaAParsear = "4F1/8 4A1/8 4AbM1/4 4F1/8 _ 4B1/2 4F1/8 4A1/8 4B1/4 5Cs1/16 5Ds1/4 6A+6C#+6G1/8"
+
+    "si recibo 4F1/8 4A1/8 4AbM1/4 4F1/8 _ 4B1/2 4F1/8 4A1/8 4B1/4 5Cs1/16 5Ds1/4 5C1/2 deberia obtener la melodia de ejemplo" in {
       val Success((unaMelodia, _)) = melodia().parse(melodiaAParsear)
       unaMelodia shouldBe melodiaDeEjemplo
     }
