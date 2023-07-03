@@ -19,7 +19,7 @@ object CombinableParsers {
         (value1, rest1) <- aParser.parse(elementToParse)
         (value2, rest2) <- anotherParser.parse(rest1)
       } yield ((value1, value2), rest2)
-      expandTry(result, new RuntimeException("El elemento no satisface el parser concatenado"))
+      expandTry(result, new RuntimeException(s"El elemento no satisface el parser concatenado"))
     }
   }
 
@@ -39,7 +39,7 @@ object CombinableParsers {
         (value1, rest1) <- aParser.parse(elementToParse)
         (_, rest2) <- anotherParser.parse(rest1)
       } yield (value1, rest2)
-      expandTry(result, new RuntimeException("El elemento no satisface el parser concatenado"))
+      expandTry(result, new RuntimeException(s"$elementToParse El elemento no satisface el parser concatenado"))
     }
   }
 

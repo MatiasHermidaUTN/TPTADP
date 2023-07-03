@@ -11,12 +11,11 @@ object BasicParsers {
 
   case class char(charToFind: Char) extends Parser[Char]  {
     override def parseFunction(elementToParse: String): SuccessParse[Char]  = {
-      val result = stringMatches(
-        elementToParse,
-        s"$charToFind.*",
-        new RuntimeException("El elemento no empieza con el caracter a buscar")
-      ).charAt(0)
-      (result, stringTail(elementToParse))
+      throwExceptionIfCondition(
+        !elementToParse.startsWith(charToFind.toString),
+        new RuntimeException("El elemento no empieza con una letra")
+      )
+      (charToFind, stringTail(elementToParse))
     }
   }
 
@@ -50,12 +49,8 @@ object BasicParsers {
 
   case class number() extends Parser[Int]  {
     override def parseFunction(elementToParse: String) : SuccessParse[Int] = {
-      val result = stringMatches(
-        elementToParse.charAt(0).toString(),
-        "[0-9]",
-        new RuntimeException("El elemento no empieza con un numero")
-      ).charAt(0).asDigit
-      (result, stringTail(elementToParse))
+      val (value, rest) = digit().parseFunction(elementToParse)
+      (value.asDigit, rest)
     }
   }
 
