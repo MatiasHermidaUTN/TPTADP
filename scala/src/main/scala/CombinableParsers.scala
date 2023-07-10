@@ -1,5 +1,5 @@
 import Parser.{Parser, SuccessParse}
-import ParsersHelper.{expandTry}
+import ParsersHelper.expandTry
 
 object CombinableParsers {
   case class or[T](aParser: Parser[T], anotherParser: Parser[T]) extends Parser[T] {

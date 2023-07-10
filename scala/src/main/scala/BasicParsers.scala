@@ -11,17 +11,17 @@ object BasicParsers {
 
   def char(charToFind: Char): Parser[Char] = anyChar().satisfies(_==charToFind)
 
-  val void = anyChar().const(())
+  val void: Parser[Unit] = anyChar().const(())
 
   def matches(regex: String): Parser[Char] = anyChar().satisfies(_.toString.matches(regex))
 
-  val letter = matches("[a-zA-Z]")
+  val letter: Parser[Char] = matches("[a-zA-Z]")
 
-  val digit = matches("[0-9]")
+  val digit: Parser[Char] = matches("[0-9]")
 
-  val number = digit.map(_.asDigit)
+  val number: Parser[Int] = digit.map(_.asDigit)
 
-  val alphaNum = letter <|> digit
+  val alphaNum: Parser[Char] = letter <|> digit
 
   case class string(stringToFind: String) extends Parser[String] {
     override def parseFunction(elementToParse: String) : SuccessParse[String] = {

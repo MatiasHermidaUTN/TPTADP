@@ -1,7 +1,6 @@
 import ExceptionsHelper.throwExceptionIfCondition
 import Parser.{Parser, SuccessParse}
-
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object OperationsParsers {
   case class satisfy[T](parser: Parser[T], condition: T => Boolean) extends Parser[T] {
@@ -56,7 +55,7 @@ object OperationsParsers {
     }
   }
 
-  def plus[T](parser: Parser[T]): Parser[List[T]] = parser.*.satisfies(!_.isEmpty)
+  def plus[T](parser: Parser[T]): Parser[List[T]] = parser.*().satisfies(_.nonEmpty)
 
   def separator[T, U](parser: Parser[T], sepParser: Parser[U]): Parser[List[T]] = ((parser <~ sepParser).+ <> parser).map {
     case (valueList, lastValue) => valueList ::: List(lastValue)
