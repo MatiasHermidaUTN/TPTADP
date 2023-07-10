@@ -1,115 +1,54 @@
-import BasicParsers.{anyChar, char, digit, letter, number}
+import BasicParsers.{char, number, string}
 import Musica._
-import Parser.{Parser, SuccessParse}
 
 object MusicParser {
 
-  case class silencio() extends Parser[Tocable] {
-    override def parseFunction(elementToParse: String): SuccessParse[Tocable] = {
-      val silenceParser = anyChar()
-      val (value, rest) = silenceParser.parseFunction(elementToParse)
-      value match {
-        case '_' => (Silencio(Blanca), rest)
-        case '-' => (Silencio(Negra), rest)
-        case '~' => (Silencio(Corchea), rest)
-        case _ => throw new RuntimeException("El silencio no existe")
-      }
-    }
+  val silencio = char('_').const(Silencio(Blanca)) <|> char('-').const(Silencio(Negra)) <|> char('~').const(Silencio(Corchea))
+
+  val alteracion =
+      char('#').const {  (unaNota: Nota) => unaNota.sostenido } <|>
+      char('s').const {  (unaNota: Nota) => unaNota.sostenido } <|>
+      char('b').const {  (unaNota: Nota) => unaNota.bemol }
+
+  val nota = ((
+      char('C').const(C) <|>
+      char('D').const(D) <|>
+      char('E').const(E) <|>
+      char('F').const(F) <|>
+      char('G').const(G) <|>
+      char('A').const(A) <|>
+      char('B').const(B)
+    ) <> alteracion.opt).map {
+    case (note, None) => note
+    case (note, Some(alteracionFn)) => alteracionFn(note)
   }
 
-  val alteracion = char('#') <|> char('s') <|> char('b')
+  val tono = (number <> nota).map{ case (octava, nota) => Tono(octava, nota) }
 
-  case class tono() extends Parser[Tono] {
+  val figura =
+    string("1/16").const(SemiCorchea) <|>
+    string("1/1").const(Redonda) <|>
+    string("1/2").const(Blanca) <|>
+    string("1/4").const(Negra) <|>
+    string("1/8").const(Corchea)
 
-    override def parseFunction(elementToParse: String): SuccessParse[Tono] = {
-      val tonoParser = number() <> nota()
-      val ((octava, note), rest) = tonoParser.parseFunction(elementToParse)
-      (Tono(octava, note), rest)
-    }
+  val sonido = (tono <> figura).map { case (unTono, unaFigura) => Sonido(unTono, unaFigura) }
+
+  val calidad =
+    char('m').const { (unaNota : Nota, octava: Int, unaFigura: Figura) => unaNota.acordeMenor(octava, unaFigura) } <|>
+    char('M').const { (unaNota : Nota, octava: Int, unaFigura: Figura) => unaNota.acordeMayor(octava, unaFigura) }
+
+  val acordeConCalidad = (number <> nota <> calidad <> figura).map {
+    case (((octava ,unaNota), acordeFn), unaFigura) => acordeFn(unaNota, octava, unaFigura)
   }
 
-  val notaChar = char('C') <|> char('D') <|> char('E') <|> char('F') <|> char('G') <|> char('A') <|> char('B')
-
-  case class nota() extends Parser[Nota] {
-
-    private def matchNoteChar(noteChar: Char, alteration: Option[Char]): Nota = {
-      val note = noteChar match {
-        case 'C' => C
-        case 'D' => D
-        case 'E' => E
-        case 'F' => F
-        case 'G' => G
-        case 'A' => A
-        case 'B' => B
-        case _ => throw new RuntimeException("La nota no existe")
-      }
-      alteration match {
-        case None => note
-        case Some('#') => note.sostenido
-        case Some('s') => note.sostenido
-        case Some('b') => note.bemol
-        case _ => throw new RuntimeException("La alteracion no existe")
-      }
-    }
-    override def parseFunction(elementToParse: String): (Nota, String) = {
-      val notaParser = notaChar <> alteracion.opt
-      val ((note, alteration), rest) = notaParser.parseFunction(elementToParse)
-      (matchNoteChar(note, alteration), rest)
-    }
+  val acordeConNotas = ((tono sepBy char('+')) <> figura).map {
+    case ( tonos, unaFigura ) => Acorde(tonos, unaFigura)
   }
 
-  case class figura() extends Parser[Figura] {
-    override def parseFunction(elementToParse: String): SuccessParse[Figura] = {
-      val figuraParser = digit().+ <> (char('/') ~> digit().+)
-      val ((num,den), rest) = figuraParser.parseFunction(elementToParse)
-      s"${num.mkString}/${den.mkString}" match {
-        case "1/1" => (Redonda, rest)
-        case "1/2" => (Blanca, rest)
-        case "1/4" => (Negra, rest)
-        case "1/8" => (Corchea, rest)
-        case "1/16" => (SemiCorchea, rest)
-        case _ => throw new RuntimeException("La figura no existe")
-      }
-    }
-  }
+  val acorde = acordeConCalidad <|> acordeConNotas
+  val tocable = silencio <|> sonido <|> acorde
 
-  case class sonido() extends Parser[Tocable] {
-    override def parseFunction(elementToParse: String): SuccessParse[Tocable] = {
-      val sonidoParser = tono() <> figura()
-      val ((unTono, unaFigura), rest) = sonidoParser.parseFunction(elementToParse)
-      (Sonido(unTono, unaFigura), rest)
-    }
-  }
-
-  case class acordeConCalidad() extends Parser[Tocable] {
-    override def parseFunction(elementToParse: String): SuccessParse[Tocable] = {
-      val acordeParser = number() <> nota() <> letter() <> figura()
-      val ((((octava ,unaNota), unaCalidad), unaFigura), rest) = acordeParser.parseFunction(elementToParse)
-      unaCalidad match {
-        case 'm' => (unaNota.acordeMenor(octava, unaFigura), rest)
-        case 'M' => (unaNota.acordeMayor(octava, unaFigura), rest)
-        case _ => throw new RuntimeException("La calidad no existe")
-      }
-    }
-  }
-
-  case class acordeConNotas() extends Parser[Tocable] {
-    override def parseFunction(elementToParse: String): SuccessParse[Tocable] = {
-      val acordeParser = (tono() <~ char('+')).+ <> tono() <> figura()
-      val (((tonos, lastTono), unaFigura), rest) = acordeParser.parseFunction(elementToParse)
-      (Acorde(tonos ::: List(lastTono), unaFigura), rest)
-    }
-  }
-
-  val acorde = acordeConCalidad() <|> acordeConNotas()
-  val tocable = silencio() <|> sonido() <|> acorde
-
-  case class melodia() extends Parser[Melodia] {
-    override def parseFunction(elementToParse: String): SuccessParse[Melodia] = {
-      val melodiaParser = ( tocable <~ char(' ') ).* <> tocable
-      val ((tocables, ultimoTocable), rest) = melodiaParser.parseFunction(elementToParse)
-      (tocables ::: List(ultimoTocable), rest)
-    }
-  }
+  val melodia = tocable sepBy char(' ')
 
 }

@@ -18,43 +18,39 @@ class ProjectSpec extends AnyFreeSpec {
       }
     }
     "char Parser" - {
-      val char = new char('c')
       "recibe el string chau, retorna Success con char c" in {
-        val Success(result) = char.parse("chau")
+        val Success(result) = char('c').parse("chau")
         result shouldBe ('c', "hau")
       }
       "recibe el string hola, retorna Failure" in {
-        val Failure(exception) = char.parse("hola")
-        exception.getMessage shouldBe "El elemento no empieza con el caracter a buscar"
+        val Failure(exception) = char('c').parse("hola")
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
       }
     }
     "void Parser" - {
-      val void = new void()
       "recibe el string hola, retorna Success con Unit" in {
         val Success(result) = void.parse("hola")
         result shouldBe ((), "ola")
       }
     }
     "letter Parser" - {
-      val letter = new letter()
       "recibe el string hola, retorna Success con char h" in {
         val Success(result) = letter.parse("hola")
         result shouldBe ('h', "ola")
       }
       "recibe el string 1234, retorna Failure" in {
         val Failure(exception) = letter.parse("1234")
-        exception.getMessage shouldBe "El elemento no empieza con una letra"
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
       }
     }
     "digit Parser" - {
-      val digit = new digit()
       "recibe el string 1234, retorna Success con char 1" in {
         val Success(result) = digit.parse("1234")
         result shouldBe ('1', "234")
       }
       "recibe el string hola, retorna Failure" in {
         val Failure(exception) = digit.parse("hola")
-        exception.getMessage shouldBe "El elemento no empieza con un digito"
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
       }
     }
     "alphaNum Parser" - {
@@ -181,11 +177,11 @@ class ProjectSpec extends AnyFreeSpec {
       }
       "dado un parser char('c') de kleene+ que recibe burt, retorna Failure" in {
         val Failure(exception) = charPlusParser.parse("burt")
-        exception.getMessage shouldBe "No se encontraron 1 o mas casos"
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
       }
     }
     "sepBy" - {
-      val integer = number().+
+      val integer = number.+
       val numeroDeTelefono = integer.sepBy(char('-'))
       "dado un parser number de kleene+ separados por - que recibe 4356-1234, retorna Success con (List(List(4,3,5,6), List(1,2,3,4)), )" in {
         val Success(result) = numeroDeTelefono.parse("4356-1234")
@@ -193,7 +189,7 @@ class ProjectSpec extends AnyFreeSpec {
       }
       "dado un parser number de kleene+ por - que recibe 4356 1234, retorna Failure" in {
         val Failure(exception) = numeroDeTelefono.parse("4356 1234")
-        exception.getMessage shouldBe "El elemento no empieza con el caracter a buscar"
+        exception.getMessage shouldBe "El elemento no satisface el parser concatenado"
       }
     }
     "const" - {

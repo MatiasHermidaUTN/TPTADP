@@ -5,11 +5,11 @@ import ExceptionsHelper.throwExceptionIfCondition
 import scala.util.Try
 
 object Parser {
-  type SuccessParse[T] = (T, String)
+  type SuccessParse[+T] = (T, String)
 
   type ParseFunction[T] = String => SuccessParse[T]
 
-  abstract class Parser[T]{
+  abstract class Parser[+T]{
     def parse(elementToParse: String): Try[SuccessParse[T]] = {
       Try {
         throwExceptionIfCondition(
@@ -22,7 +22,7 @@ object Parser {
 
     def parseFunction(elementToParse: String): SuccessParse[T]
 
-    def <|>(otherParser: Parser[T]): Parser[T] = or(this, otherParser)
+    def <|>[T1 >: T](otherParser: Parser[T1]): Parser[T1] = or(this, otherParser)
     def <>[U](otherParser: Parser[U]): Parser[(T,U)] = concat(this, otherParser)
     def ~>[U](otherParser: Parser[U]): Parser[U] = rightMost(this, otherParser)
     def <~[U](otherParser: Parser[U]): Parser[T] = leftMost(this, otherParser)
