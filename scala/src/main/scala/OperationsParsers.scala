@@ -15,13 +15,6 @@ object OperationsParsers {
   }
 
   case class optional[T](parser: Parser[T]) extends Parser[Option[T]] {
-
-    override def parse(elementToParse: String): Try[(Option[T], String)] = {
-      Try {
-        parseFunction(elementToParse)
-      }
-    }
-
     override def parseFunction(elementToParse: String): SuccessParse[Option[T]] = {
       val result = parser.parse(elementToParse)
       result match {
@@ -41,12 +34,6 @@ object OperationsParsers {
           result
         case Success((value, rest)) =>
           getParseIterations(rest, iterationsValues ::: List(value))
-      }
-    }
-
-    override def parse(elementToParse: String): Try[(List[T], String)] = {
-      Try {
-        parseFunction(elementToParse)
       }
     }
 

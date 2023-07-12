@@ -155,6 +155,10 @@ class ProjectSpec extends AnyFreeSpec {
     }
     "kleene" - {
       val kleeneParser = char('c').*
+      "dado un parser recibe una lista vacia cuando no logra pasear" in {
+        val Success(result) = kleeneParser.parse("mio")
+        result shouldBe(List(), "mio")
+      }
       "dado un parser char('c') de kleene que recibe cccasa, retorna Success con (List('c','c','c'), asa)" in {
         val Success(result) =kleeneParser.parse("cccasa")
         result shouldBe (List('c','c','c'), "asa")
