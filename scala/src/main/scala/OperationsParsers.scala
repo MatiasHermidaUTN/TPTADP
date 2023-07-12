@@ -1,15 +1,11 @@
-import ExceptionsHelper.throwExceptionIfCondition
 import Parser.{Parser, SuccessParse}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object OperationsParsers {
   case class satisfy[T](parser: Parser[T], condition: T => Boolean) extends Parser[T] {
     override def parseFunction(elementToParse: String): SuccessParse[T] = {
-      val (value, rest) = parser.parseFunction(elementToParse)
-      throwExceptionIfCondition(
-        !condition(value),
-        new RuntimeException("El elemento parseado no satisface la condicion dada")
-      )
+      val (value, rest) = parser.parse(elementToParse).get
+      if(!condition(value)) throw new RuntimeException("El elemento parseado no satisface la condicion dada")
       (value, rest)
     }
   }
@@ -29,11 +25,8 @@ object OperationsParsers {
     private def getParseIterations(elementToParse: String, iterationsValues: List[T]): SuccessParse[List[T]] = {
       val parsedElement = parser.parse(elementToParse)
       parsedElement match {
-        case Failure(_) =>
-          val result = (iterationsValues, elementToParse)
-          result
-        case Success((value, rest)) =>
-          getParseIterations(rest, iterationsValues ::: List(value))
+        case Failure(_) => (iterationsValues, elementToParse)
+        case Success((value, rest)) => getParseIterations(rest, iterationsValues ::: List(value))
       }
     }
 
@@ -52,7 +45,7 @@ object OperationsParsers {
 
   case class mapped[T, U](parser: Parser[T], transform: T => U) extends Parser[U] {
     override def parseFunction(elementToParse: String): (U, String) = {
-      val (value, rest) = parser.parseFunction(elementToParse)
+      val (value, rest) = parser.parse(elementToParse).get
       (transform(value), rest)
     }
   }

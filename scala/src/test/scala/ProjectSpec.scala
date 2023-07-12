@@ -104,7 +104,7 @@ class ProjectSpec extends AnyFreeSpec {
       "combina parsers string(hola) y string(mundo) con <> y recibe holachau, retorna Failure" in {
         val holamundo = string("hola") <> string("mundo")
         val Failure(exception) = holamundo.parse("holachau")
-        exception.getMessage shouldBe "El elemento no satisface el parser concatenado"
+        exception.getMessage shouldBe "El elemento no empieza con el string a buscar"
       }
     }
     "RightMost Combinator" - {
@@ -116,7 +116,7 @@ class ProjectSpec extends AnyFreeSpec {
       "combina parsers string(hola) y string(mundo) con <> y recibe holachau, retorna Failure" in {
         val holamundo = string("hola") ~> string("mundo")
         val Failure(exception) = holamundo.parse("holachau")
-        exception.getMessage shouldBe "El elemento no satisface el parser concatenado"
+        exception.getMessage shouldBe "El elemento no empieza con el string a buscar"
       }
     }
     "LeftMost Combinator" - {
@@ -128,7 +128,7 @@ class ProjectSpec extends AnyFreeSpec {
       "combina parsers string(hola) y string(mundo) con <> y recibe holachau, retorna Failure" in {
         val holamundo = string("hola") <~ string("mundo")
         val Failure(exception) = holamundo.parse("holachau")
-        exception.getMessage shouldBe "El elemento no satisface el parser concatenado"
+        exception.getMessage shouldBe "El elemento no empieza con el string a buscar"
       }
     }
   }
@@ -193,7 +193,7 @@ class ProjectSpec extends AnyFreeSpec {
       }
       "dado un parser number de kleene+ por - que recibe 4356 1234, retorna Failure" in {
         val Failure(exception) = numeroDeTelefono.parse("4356 1234")
-        exception.getMessage shouldBe "El elemento no satisface el parser concatenado"
+        exception.getMessage shouldBe "El elemento parseado no satisface la condicion dada"
       }
     }
     "const" - {

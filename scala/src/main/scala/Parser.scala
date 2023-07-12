@@ -1,6 +1,5 @@
 import CombinableParsers.{concat, leftMost, or, rightMost}
 import OperationsParsers.{constant, kleene, mapped, optional, plus, satisfy, separator}
-import ExceptionsHelper.throwExceptionIfCondition
 
 import scala.util.Try
 
@@ -12,10 +11,7 @@ object Parser {
   abstract class Parser[+T]{
     def parse(elementToParse: String): Try[SuccessParse[T]] = {
       Try {
-        throwExceptionIfCondition(
-          elementToParse.isEmpty,
-          new RuntimeException("No se encontro ningun caracter")
-        )
+        if(elementToParse.isEmpty) throw new RuntimeException("No se encontro ningun caracter")
         parseFunction(elementToParse)
       }
     }

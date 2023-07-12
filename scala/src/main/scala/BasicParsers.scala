@@ -1,4 +1,3 @@
-import ExceptionsHelper.throwExceptionIfCondition
 import Parser.{Parser, SuccessParse}
 
 object BasicParsers {
@@ -25,10 +24,7 @@ object BasicParsers {
 
   case class string(stringToFind: String) extends Parser[String] {
     override def parseFunction(elementToParse: String) : SuccessParse[String] = {
-      throwExceptionIfCondition(
-        !elementToParse.startsWith(stringToFind),
-        new RuntimeException("El elemento no empieza con el string a buscar")
-      )
+      if(!elementToParse.startsWith(stringToFind)) throw new RuntimeException("El elemento no empieza con el string a buscar")
       (stringToFind, elementToParse.replaceFirst(stringToFind, ""))
     }
   }

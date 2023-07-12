@@ -4,7 +4,10 @@ import Parser.Parser
 
 object MusicParser {
 
-  val silencio: Parser[Silencio] = char('_').const(Silencio(Blanca)) <|> char('-').const(Silencio(Negra)) <|> char('~').const(Silencio(Corchea))
+  val silencio: Parser[Silencio] =
+      char('_').const(Silencio(Blanca)) <|>
+      char('-').const(Silencio(Negra)) <|>
+      char('~').const(Silencio(Corchea))
 
   val alteracion: Parser[Nota => Nota] =
       char('#').const {  (unaNota: Nota) => unaNota.sostenido } <|>
@@ -35,12 +38,12 @@ object MusicParser {
 
   val sonido: Parser[Sonido] = (tono <> figura).map { case (unTono, unaFigura) => Sonido(unTono, unaFigura) }
 
-  val calidad: Parser[(Nota, Int, Figura) => Acorde] =
-    char('m').const { (unaNota : Nota, octava: Int, unaFigura: Figura) => unaNota.acordeMenor(octava, unaFigura) } <|>
-    char('M').const { (unaNota : Nota, octava: Int, unaFigura: Figura) => unaNota.acordeMayor(octava, unaFigura) }
+  val calidad: Parser[(Tono, Figura) => Acorde] =
+    char('m').const { (unTono: Tono, unaFigura: Figura) => unTono.nota.acordeMenor(unTono.octava, unaFigura) } <|>
+    char('M').const { (unTono: Tono, unaFigura: Figura) => unTono.nota.acordeMayor(unTono.octava, unaFigura) }
 
-  val acordeConCalidad: Parser[Acorde] = (number <> nota <> calidad <> figura).map {
-    case (((octava ,unaNota), acordeFn), unaFigura) => acordeFn(unaNota, octava, unaFigura)
+  val acordeConCalidad: Parser[Acorde] = (tono <> calidad <> figura).map {
+    case ((unTono, acordeFn), unaFigura) => acordeFn(unTono, unaFigura)
   }
 
   val acordeConNotas: Parser[Acorde] = ((tono sepBy char('+')) <> figura).map {
